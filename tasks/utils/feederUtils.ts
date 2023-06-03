@@ -16,7 +16,7 @@ import {
     FeederPool__factory,
     NonPeggedFeederPool__factory,
     BoostedVault__factory,
-    Masset__factory,
+    Zasset__factory,
     BoostedDualVault,
     StakingRewardsWithPlatformToken,
     StakingRewards,
@@ -40,7 +40,7 @@ interface Config {
 }
 
 export interface FeederData {
-    mAsset: Token
+    zAsset: Token
     fAsset: Token
     fAssetRedemptionPriceGetter?: string
     name: string
@@ -96,10 +96,10 @@ export const deployFeederPool = async (signer: Signer, feederData: FeederData, h
     if (feederData.fAssetRedemptionPriceGetter) {
         // Update fAssetRedemptionPriceGetter price oracle
         await IRedemptionPriceSnap__factory.connect(feederData.fAssetRedemptionPriceGetter, signer).updateSnappedPrice()
-        fpConstructorArgs = [getChainAddress("Nexus", chain), feederData.mAsset.address, feederData.fAssetRedemptionPriceGetter]
+        fpConstructorArgs = [getChainAddress("Nexus", chain), feederData.zAsset.address, feederData.fAssetRedemptionPriceGetter]
         impl = await deployContract(new NonPeggedFeederPool__factory(linkedAddress, signer), "NonPeggedFeederPool", fpConstructorArgs)
     } else {
-        fpConstructorArgs = [getChainAddress("Nexus", chain), feederData.mAsset.address]
+        fpConstructorArgs = [getChainAddress("Nexus", chain), feederData.zAsset.address]
         impl = await deployContract(new FeederPool__factory(linkedAddress, signer), "FeederPool", fpConstructorArgs)
     }
 
@@ -114,13 +114,13 @@ export const deployFeederPool = async (signer: Signer, feederData: FeederData, h
     })
 
     // Initialization Data
-    const mAsset = Masset__factory.connect(feederData.mAsset.address, signer)
-    const bAssets = await mAsset.getBassets()
+    const zAsset = Zasset__factory.connect(feederData.zAsset.address, signer)
+    const bAssets = await zAsset.getBassets()
     const mpAssets = bAssets.personal.map((bAsset) => bAsset.addr)
 
     console.log(`mpAssets. count = ${mpAssets.length}, list: `, mpAssets)
     console.log(
-        `Initializing FeederPool with: ${feederData.name}, ${feederData.symbol}, mAsset ${feederData.mAsset.address}, fAsset ${
+        `Initializing FeederPool with: ${feederData.name}, ${feederData.symbol}, zAsset ${feederData.zAsset.address}, fAsset ${
             feederData.fAsset.address
         }, A: ${feederData.config.a.toString()}, min: ${formatEther(feederData.config.limits.min)}, max: ${formatEther(
             feederData.config.limits.max,
@@ -130,8 +130,8 @@ export const deployFeederPool = async (signer: Signer, feederData: FeederData, h
         feederData.name,
         feederData.symbol,
         {
-            addr: feederData.mAsset.address,
-            integrator: feederData.mAsset.integrator || ZERO_ADDRESS,
+            addr: feederData.zAsset.address,
+            integrator: feederData.zAsset.integrator || ZERO_ADDRESS,
             hasTxFee: false,
             status: 0,
         },
@@ -261,7 +261,7 @@ export const deployVault = async (
 //         await Promise.all(bAssets.map(async (b) => (await b.contract.balanceOf(await sender.getAddress())).toString())),
 //         bAssets.map((b) => b.address),
 //         (await feederData.pool.getBassets())[0].map((b) => b[0]),
-//         await feederData.pool.mAsset(),
+//         await feederData.pool.zAsset(),
 //     )
 //     const tx = await feederData.pool.mintMulti(
 //         bAssets.map((b) => b.address),
@@ -272,9 +272,9 @@ export const deployVault = async (
 //     const receiptMint = await tx.wait()
 
 //     // Log minted amount
-//     const mAssetAmount = formatEther(await feederData.pool.totalSupply())
+//     const zAssetAmount = formatEther(await feederData.pool.totalSupply())
 //     console.log(
-//         `Minted ${mAssetAmount} fpToken from ${formatEther(scaledTestQty)} Units for each [mAsset, fAsset]. gas used ${
+//         `Minted ${zAssetAmount} fpToken from ${formatEther(scaledTestQty)} Units for each [zAsset, fAsset]. gas used ${
 //             receiptMint.gasUsed
 //         }`,
 //     )
@@ -290,10 +290,10 @@ export const deployVault = async (
 //     const len = feederPools.length
 //     // eslint-disable-next-line
 //     for (let i = 0; i < len; i++) {
-//         const [[{ addr: massetAddr }, { addr: fassetAddr }]] = await feederPools[i].getBassets()
-//         const masset = Masset__factory.connect(massetAddr, sender)
-//         const [bassets] = await masset.getBassets()
-//         const assets = [massetAddr, fassetAddr, ...bassets.map(({ addr }) => addr)]
+//         const [[{ addr: zassetAddr }, { addr: fassetAddr }]] = await feederPools[i].getBassets()
+//         const zasset = Zasset__factory.connect(zassetAddr, sender)
+//         const [bassets] = await zasset.getBassets()
+//         const assets = [zassetAddr, fassetAddr, ...bassets.map(({ addr }) => addr)]
 
 //         // Make the approval in one tx
 //         const approveTx = await feederWrapper["approve(address,address,address[])"](feederPools[i].address, vaults[i].address, assets)
@@ -326,19 +326,19 @@ export const deployVault = async (
 //     }
 
 //     // 2.2   For each fAsset
-//     //        - fetch fAsset & mAsset
+//     //        - fetch fAsset & zAsset
 //     const data: FeederData[] = []
 
 //     // eslint-disable-next-line
 //     for (const pair of pairs) {
-//         const mAssetContract = MV2__factory.connect(pair.mAsset.address, deployer)
+//         const zAssetContract = MV2__factory.connect(pair.zAsset.address, deployer)
 //         const fAssetContract = MockERC20__factory.connect(pair.fAsset.address, deployer)
-//         const deployedMasset: DeployedFasset = {
+//         const deployedZasset: DeployedFasset = {
 //             integrator: ZERO_ADDRESS,
 //             txFee: false,
-//             contract: mAssetContract,
-//             address: pair.mAsset.address,
-//             symbol: pair.mAsset.symbol,
+//             contract: zAssetContract,
+//             address: pair.zAsset.address,
+//             symbol: pair.zAsset.symbol,
 //         }
 //         const deployedFasset: DeployedFasset = {
 //             integrator: ZERO_ADDRESS,
@@ -351,11 +351,11 @@ export const deployVault = async (
 //             ...feederLibs,
 //             nexus: addresses.nexus,
 //             proxyAdmin: addresses.proxyAdmin,
-//             mAsset: deployedMasset,
+//             zAsset: deployedZasset,
 //             fAsset: deployedFasset,
 //             aToken: pair.aToken,
-//             name: `${deployedMasset.symbol}/${deployedFasset.symbol} Feeder Pool`,
-//             symbol: `fP${deployedMasset.symbol}/${deployedFasset.symbol}`,
+//             name: `${deployedZasset.symbol}/${deployedFasset.symbol} Feeder Pool`,
+//             symbol: `fP${deployedZasset.symbol}/${deployedFasset.symbol}`,
 //             config: {
 //                 a: pair.A,
 //                 limits: {
@@ -363,12 +363,12 @@ export const deployVault = async (
 //                     max: simpleToExactAmount(90, 16),
 //                 },
 //             },
-//             vaultName: `${deployedMasset.symbol}/${deployedFasset.symbol} fPool Vault`,
-//             vaultSymbol: `v-fP${deployedMasset.symbol}/${deployedFasset.symbol}`,
+//             vaultName: `${deployedZasset.symbol}/${deployedFasset.symbol} fPool Vault`,
+//             vaultSymbol: `v-fP${deployedZasset.symbol}/${deployedFasset.symbol}`,
 //             priceCoeff: pair.priceCoeff,
 //         })
 //     }
-//     //        - create fPool (nexus, mAsset, name, integrator, config)
+//     //        - create fPool (nexus, zAsset, name, integrator, config)
 //     // eslint-disable-next-line
 //     for (const poolData of data) {
 //         console.log(`\n~~~~~ POOL ${poolData.symbol} ~~~~~\n\n`)
@@ -378,7 +378,7 @@ export const deployVault = async (
 //         poolData.pool = feederPool
 
 //         // Mint initial supply
-//         // await mint(deployer, [poolData.mAsset, poolData.fAsset], poolData)
+//         // await mint(deployer, [poolData.zAsset, poolData.fAsset], poolData)
 
 //         // Rewards Contract
 //         if (addresses.boostDirector) {

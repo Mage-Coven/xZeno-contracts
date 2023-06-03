@@ -18,12 +18,12 @@ import "./deps/GamifiedTokenStructs.sol";
  * Scaled balance is determined by quests a user completes, and the length of time they keep the raw balance wrapped.
  * Stakers can unstake, after the elapsed cooldown period, and before the end of the unstake window. Users voting/earning
  * power is slashed during this time, and they may face a redemption fee if they leave early.
- * The reason for this unstake window is that this StakedToken acts as a source of insurance value for the mStable system,
+ * The reason for this unstake window is that this StakedToken acts as a source of insurance value for the xZeno system,
  * which can access the funds via the Recollateralisation module, up to the amount defined in `safetyData`.
- * Voting power can be used for a number of things: voting in the mStable DAO/emission dials, boosting rewards, earning
+ * Voting power can be used for a number of things: voting in the xZeno DAO/emission dials, boosting rewards, earning
  * rewards here. While a users "balance" is unique to themselves, they can choose to delegate their voting power (which will apply
- * to voting in the mStable DAO and emission dials).
- * @author mStable
+ * to voting in the xZeno DAO and emission dials).
+ * @author xZeno
  * @dev Only whitelisted contracts can communicate with this contract, in order to avoid having tokenised wrappers that
  * could potentially circumvent our unstaking procedure.
  **/
@@ -88,7 +88,7 @@ contract StakedToken is GamifiedVotingToken, InitializableReentrancyGuard {
     /**
      * @param _nameArg Token name
      * @param _symbolArg Token symbol
-     * @param _rewardsDistributorArg mStable Rewards Distributor
+     * @param _rewardsDistributorArg xZeno Rewards Distributor
      */
     function __StakedToken_init(
         bytes32 _nameArg,
@@ -101,7 +101,7 @@ contract StakedToken is GamifiedVotingToken, InitializableReentrancyGuard {
     }
 
     /**
-     * @dev Only the recollateralisation module, as specified in the mStable Nexus, can execute this
+     * @dev Only the recollateralisation module, as specified in the xZeno Nexus, can execute this
      */
     modifier onlyRecollateralisationModule() {
         require(_msgSender() == _recollateraliser(), "Only Recollateralisation");
@@ -121,7 +121,7 @@ contract StakedToken is GamifiedVotingToken, InitializableReentrancyGuard {
     }
 
     /**
-     * @dev Only whitelisted contracts can call core fns. mStable governors can whitelist and de-whitelist wrappers.
+     * @dev Only whitelisted contracts can call core fns. xZeno governors can whitelist and de-whitelist wrappers.
      * Access may be given to yield optimisers to boost rewards, but creating unlimited and ungoverned wrappers is unadvised.
      */
     modifier assertNotContract() {

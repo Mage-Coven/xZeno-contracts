@@ -1,6 +1,6 @@
 import { BN } from "../test-utils/math"
 import { EthAddress } from "./common"
-import { Basset } from "../test-utils/mstable-objects"
+import { Basset } from "../test-utils/xzeno-objects"
 import { MockERC20 } from "./generated"
 
 export interface ATokenDetails {
@@ -29,7 +29,7 @@ export interface BassetIntegrationDetails {
 
 export interface BassetDetails extends Basset {
     address: EthAddress
-    mAssetUnits: BN
+    zAssetUnits: BN
     actualBalance: BN
     rawBalance?: BN
     platformBalance?: BN

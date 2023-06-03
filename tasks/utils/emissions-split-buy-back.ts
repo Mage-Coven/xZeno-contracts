@@ -2,20 +2,20 @@
 import { Signer } from "@ethersproject/abstract-signer"
 import { ContractTransaction } from "ethers"
 import { BN, simpleToExactAmount } from "@utils/math"
-import { RevenueSplitBuyBack, IERC20Metadata__factory, Masset__factory } from "types/generated"
+import { RevenueSplitBuyBack, IERC20Metadata__factory, Zasset__factory } from "types/generated"
 import { EncodedPaths, encodeUniswapPath, getWETHPath, bestQuoteSwap } from "@utils/peripheral/uniswap"
 
-export interface MAssetSwap {
+export interface ZAssetSwap {
     address: string
     bAssetMinSlippage: number
     rewardMinSlippage: number
-    mAssetMinBalance: number | BN
+    zAssetMinBalance: number | BN
     swapFees: number[][] // Options of fees to quote
 }
 
 export interface MainParams {
     revenueSplitBuyBack: RevenueSplitBuyBack
-    mAssets: MAssetSwap[]
+    zAssets: ZAssetSwap[]
     blockNumber: number | string
 }
 export interface BuyBackRewardsParams extends MainParams {
@@ -29,18 +29,18 @@ export interface BuyBackRewardsParams extends MainParams {
  *
  * @param {Signer} signer
  * @param {MainParams} params
- *  - mAssets: Addresses of mAssets that are to be sold for rewards. eg mUSD and mBTC.
+ *  - zAssets: Addresses of zAssets that are to be sold for rewards. eg zUSD and zBTC.
  *  - revenueSplitBuyBackAddress: The address of the revenue split buy back contract.;
 
  * @return {Promise<BuyBackRewardsParams>} 
- *  - minBassetsAmounts Minimum amount of bAsset tokens to receive for each redeem of mAssets.
+ *  - minBassetsAmounts Minimum amount of bAsset tokens to receive for each redeem of zAssets.
  * The amount uses the decimal places of the bAsset.
- * Example 1: Redeeming 10,000 mUSD with a min 2% slippage to USDC which has 6 decimal places
- * minBassetsAmounts = 10,000 mAssets * slippage 0.98 * USDC decimals 1e6 =
+ * Example 1: Redeeming 10,000 zUSD with a min 2% slippage to USDC which has 6 decimal places
+ * minBassetsAmounts = 10,000 zAssets * slippage 0.98 * USDC decimals 1e6 =
  * 1e4 * 0.98 * 1e6 = 1e10 * 0.98 = 98e8
  *
- * Example 2: Redeeming 1 mBTC with a min 5% slippage to WBTC which has 8 decimal places
- * minBassetsAmounts = 1 mAsset * slippage 0.95 * WBTC decimals 1e8 =
+ * Example 2: Redeeming 1 zBTC with a min 5% slippage to WBTC which has 8 decimal places
+ * minBassetsAmounts = 1 zAsset * slippage 0.95 * WBTC decimals 1e8 =
  * 0.95 * 1e8 = 95e6
  *
  *  - minRewardsAmounts Minimum amount of reward tokens received from the sale of bAssets.
@@ -56,8 +56,8 @@ export interface BuyBackRewardsParams extends MainParams {
  *  - uniswapPaths The Uniswap V3 bytes encoded paths.
  */
 export const calculateBuyBackRewardsQuote = async (signer: Signer, params: MainParams): Promise<BuyBackRewardsParams> => {
-    const { revenueSplitBuyBack, mAssets, blockNumber } = params
-    const mAssetsToBuyBack: MAssetSwap[] = []
+    const { revenueSplitBuyBack, zAssets, blockNumber } = params
+    const zAssetsToBuyBack: ZAssetSwap[] = []
     const minBassetsAmounts: BN[] = []
     const minRewardsAmounts: BN[] = []
     const uniswapPaths: EncodedPaths[] = []
@@ -69,51 +69,51 @@ export const calculateBuyBackRewardsQuote = async (signer: Signer, params: MainP
     const rewardsTokenContract = IERC20Metadata__factory.connect(rewardsToken, signer)
     const rTokenDecimals = await rewardsTokenContract.decimals()
     const rTokenSymbol = await rewardsTokenContract.symbol()
-    for (let i = 0; i < mAssets.length; i += 1) {
-        const mAsset = mAssets[i]
-        const bAsset: string = await revenueSplitBuyBack.bassets(mAsset.address)
-        const mAssetContract = Masset__factory.connect(mAsset.address, signer)
+    for (let i = 0; i < zAssets.length; i += 1) {
+        const zAsset = zAssets[i]
+        const bAsset: string = await revenueSplitBuyBack.bassets(zAsset.address)
+        const zAssetContract = Zasset__factory.connect(zAsset.address, signer)
         const bAssetContract = IERC20Metadata__factory.connect(bAsset, signer)
 
-        const mAssetBalance: BN = await mAssetContract.balanceOf(revenueSplitBuyBack.address)
-        const mAssetSymbol: string = await mAssetContract.symbol()
+        const zAssetBalance: BN = await zAssetContract.balanceOf(revenueSplitBuyBack.address)
+        const zAssetSymbol: string = await zAssetContract.symbol()
 
         const bAssetDecimals = await bAssetContract.decimals()
         const bAssetSymbol: string = await bAssetContract.symbol()
-        // Validate if the mAsset balance is grater than the minimum balance to buy back, default is zero.
-        if (mAssetBalance.gt(mAsset.mAssetMinBalance)) {
-            // mAssetAmount =  10000e18 * (1e18 - 0.4e18  / 1e18) = 6000e18
-            const mAssetAmount = configScale.eq(treasuryFee)
-                ? mAssetBalance
-                : mAssetBalance.mul(configScale.sub(treasuryFee)).div(configScale)
+        // Validate if the zAsset balance is grater than the minimum balance to buy back, default is zero.
+        if (zAssetBalance.gt(zAsset.zAssetMinBalance)) {
+            // zAssetAmount =  10000e18 * (1e18 - 0.4e18  / 1e18) = 6000e18
+            const zAssetAmount = configScale.eq(treasuryFee)
+                ? zAssetBalance
+                : zAssetBalance.mul(configScale.sub(treasuryFee)).div(configScale)
 
             // calculate minBassetsAmounts
-            const bAssetSlippage = 100 - mAsset.bAssetMinSlippage
-            // mAssetAmount =  6000e18 * (98/100)/1e18 * 1e6 = 5880e6 (USDC)
-            const minBassetsAmount = mAssetAmount
+            const bAssetSlippage = 100 - zAsset.bAssetMinSlippage
+            // zAssetAmount =  6000e18 * (98/100)/1e18 * 1e6 = 5880e6 (USDC)
+            const minBassetsAmount = zAssetAmount
                 .mul(bAssetSlippage)
                 .div(100)
                 .div(simpleToExactAmount(1))
                 .mul(simpleToExactAmount(1, bAssetDecimals))
             minBassetsAmounts.push(minBassetsAmount)
-            mAssetsToBuyBack.push(mAsset)
+            zAssetsToBuyBack.push(zAsset)
 
             // Get the estimated redeem amount to price better the second swap, bAsset to reward.
-            console.log(`${mAssetContract.address}.getRedeemOutput(${bAsset}, ${mAssetAmount})`)
-            const bAssetRedeemAmount = await mAssetContract.getRedeemOutput(bAsset, mAssetAmount)
+            console.log(`${zAssetContract.address}.getRedeemOutput(${bAsset}, ${zAssetAmount})`)
+            const bAssetRedeemAmount = await zAssetContract.getRedeemOutput(bAsset, zAssetAmount)
             // console for debugging purposes, do not delete
 
             console.table({
-                mAssetSymbol,
-                mAssetBalance: mAssetBalance.toString(),
+                zAssetSymbol,
+                zAssetBalance: zAssetBalance.toString(),
                 configScale: configScale.toString(),
                 treasuryFee: treasuryFee.toString(),
                 bAssetSlippage: bAssetSlippage.toString(),
                 bAssetDecimals: bAssetDecimals.toString(),
-                mAssetAmount: mAssetAmount.toString(),
+                zAssetAmount: zAssetAmount.toString(),
                 minBassetsAmount: minBassetsAmount.toString(),
                 bAssetRedeemAmount: bAssetRedeemAmount.toString(),
-                swapFees: mAsset.swapFees.toString(),
+                swapFees: zAsset.swapFees.toString(),
             })
 
             // 2 ============ minRewardsAmount ============//
@@ -129,9 +129,9 @@ export const calculateBuyBackRewardsQuote = async (signer: Signer, params: MainP
                 toToken,
                 bAssetRedeemAmount,
                 blockNumber,
-                mAsset.swapFees,
+                zAsset.swapFees,
             )
-            const rewardSlippage = 100 - mAsset.rewardMinSlippage
+            const rewardSlippage = 100 - zAsset.rewardMinSlippage
             // minRewardsAmount =  5880e6 * (98/100) /1e6 * 1e18 = 5880e6 (USDC)
             // quote out amount  of reward tokens with its decimals.
             const minRewardsAmount = outAmount.mul(rewardSlippage).div(100)
@@ -142,7 +142,7 @@ export const calculateBuyBackRewardsQuote = async (signer: Signer, params: MainP
                 bAssetSymbol,
                 rTokenSymbol,
                 rewardSlippage: rewardSlippage.toString(),
-                mAssetAmount: mAssetAmount.toString(),
+                zAssetAmount: zAssetAmount.toString(),
                 minBassetsAmount: minBassetsAmount.toString(),
                 minRewardsAmount: minRewardsAmount.toString(),
                 outAmount: outAmount.toString(),
@@ -157,10 +157,10 @@ export const calculateBuyBackRewardsQuote = async (signer: Signer, params: MainP
             uniswapPaths.push(uniswapPath)
         }
     }
-    return { ...params, mAssets: mAssetsToBuyBack, minBassetsAmounts, minRewardsAmounts, uniswapPaths }
+    return { ...params, zAssets: zAssetsToBuyBack, minBassetsAmounts, minRewardsAmounts, uniswapPaths }
 }
 /**
- * Execute the buyback rewards of different mAssets.
+ * Execute the buyback rewards of different zAssets.
  *
  * @param {Signer} signer
  * @param {MainParams} params
@@ -168,11 +168,11 @@ export const calculateBuyBackRewardsQuote = async (signer: Signer, params: MainP
  */
 export const splitBuyBackRewards = async (signer: Signer, params: MainParams): Promise<ContractTransaction> => {
     const buyBackRewardsParams = await calculateBuyBackRewardsQuote(signer, params)
-    const { mAssets, minBassetsAmounts, minRewardsAmounts, uniswapPaths, revenueSplitBuyBack } = buyBackRewardsParams
-    const mAssetAddress = mAssets.map((m) => m.address)
+    const { zAssets, minBassetsAmounts, minRewardsAmounts, uniswapPaths, revenueSplitBuyBack } = buyBackRewardsParams
+    const zAssetAddress = zAssets.map((m) => m.address)
     const uniswapPathsEncoded = uniswapPaths.map((u) => u.encoded)
     if (uniswapPaths.length > 0) {
-        return revenueSplitBuyBack.buyBackRewards(mAssetAddress, minBassetsAmounts, minRewardsAmounts, uniswapPathsEncoded)
+        return revenueSplitBuyBack.buyBackRewards(zAssetAddress, minBassetsAmounts, minRewardsAmounts, uniswapPathsEncoded)
     }
     return undefined
 }

@@ -2,7 +2,7 @@ import { ethers } from "hardhat"
 import { expect } from "chai"
 
 import { simpleToExactAmount } from "@utils/math"
-import { MassetMachine, StandardAccounts } from "@utils/machines"
+import { ZassetMachine, StandardAccounts } from "@utils/machines"
 
 import {
     MockNexus__factory,
@@ -19,7 +19,7 @@ import { Account } from "types/common"
 
 describe("BalRewardsForwarder", () => {
     let sa: StandardAccounts
-    let mAssetMachine: MassetMachine
+    let zAssetMachine: ZassetMachine
     let nexus: MockNexus
     let rewardsToken: MockERC20
     let endRecipientAddress: string
@@ -30,7 +30,7 @@ describe("BalRewardsForwarder", () => {
 
     /*
         Test Data
-        mAssets: mUSD and mBTC with 18 decimals
+        zAssets: zUSD and zBTC with 18 decimals
      */
     const setup = async (): Promise<void> => {
         // Deploy mock Nexus
@@ -40,7 +40,7 @@ describe("BalRewardsForwarder", () => {
             sa.mockInterestValidator.address,
         )
 
-        rewardsToken = await mAssetMachine.loadBassetProxy("Rewards Token", "RWD", 18)
+        rewardsToken = await zAssetMachine.loadBassetProxy("Rewards Token", "RWD", 18)
         owner = sa.dummy1
         emissionsController = sa.dummy2
         streamer = await new MockChildChainStreamer__factory(sa.default.signer).deploy()
@@ -56,8 +56,8 @@ describe("BalRewardsForwarder", () => {
 
     before(async () => {
         const accounts = await ethers.getSigners()
-        mAssetMachine = await new MassetMachine().initAccounts(accounts)
-        sa = mAssetMachine.sa
+        zAssetMachine = await new ZassetMachine().initAccounts(accounts)
+        sa = zAssetMachine.sa
 
         await setup()
     })
@@ -97,7 +97,7 @@ describe("BalRewardsForwarder", () => {
 
             await expect(tx).to.emit(forwarder, "RewardsReceived").withArgs(notificationAmount)
 
-            // check output balances: mAsset sender/recipient
+            // check output balances: zAsset sender/recipient
             expect(await rewardsToken.balanceOf(endRecipientAddress), "end recipient bal after").eq(
                 endRecipientBalBefore.add(notificationAmount),
             )

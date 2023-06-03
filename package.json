@@ -1,8 +1,8 @@
 {
-    "name": "@mstable/protocol",
+    "name": "@xblackfury/protocol",
     "version": "2.4.3",
-    "description": "mStable Contracts",
-    "author": "mStable <info@mstable.org>",
+    "description": "xZeno Contracts",
+    "author": "xZeno <info@xblackfury.org>",
     "license": "AGPL-3.0-or-later",
     "directories": {
         "test": "test"
@@ -45,7 +45,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/mstable/mstable-contracts.git"
+        "url": "git+https://github.com/mage-coven/xzeno-contracts.git"
     },
     "devDependencies": {
         "@commitlint/cli": "^12.1.1",
@@ -85,9 +85,9 @@
         "@utils": "dist/test-utils"
     },
     "bugs": {
-        "url": "https://github.com/mstable/mstable-contracts/issues"
+        "url": "https://github.com/mage-coven/xzeno-contracts/issues"
     },
-    "homepage": "https://github.com/mstable/mstable-contracts#readme",
+    "homepage": "https://github.com/mage-coven/xzeno-contracts#readme",
     "dependencies": {
         "@nomiclabs/hardhat-ethers": "^2.0.2",
         "@nomiclabs/hardhat-waffle": "^2.0.1",

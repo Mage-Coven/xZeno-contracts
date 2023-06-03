@@ -9,7 +9,7 @@ import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 
 /**
  * @title  BridgeForwarder
- * @author mStable
+ * @author xZeno
  * @notice Deployed on Ethereum L1, this Bridge Forwarder sends reward tokens across the Polygon PoS Bridge to a
  *         specified recipient contract on the Polygon chain.
  * @dev    VERSION: 1.0
@@ -34,7 +34,7 @@ contract BridgeForwarder is
     event Forwarded(uint256 amount);
 
     /**
-     * @param _nexus             mStable system Nexus address
+     * @param _nexus             xZeno system Nexus address
      * @param _rewardsToken      First token that is being distributed as a reward. eg MTA
      * @param _bridgeTokenLocker Mainnet bridge contract that receives and locks tokens for the L2 bridge.
      * @param _rootChainManager  Mainnet contract called to deposit tokens to the L2 bridge.
@@ -61,7 +61,7 @@ contract BridgeForwarder is
     /**
      * @dev Initialization function for upgradable proxy contract.
      *      This function should be called via Proxy just after contract deployment.
-     * @param _emissionsController mStable Emissions Controller that distributes MTA rewards
+     * @param _emissionsController xZeno Emissions Controller that distributes MTA rewards
      */
     function initialize(address _emissionsController) external initializer {
         InitializableRewardsDistributionRecipient._initialize(_emissionsController);

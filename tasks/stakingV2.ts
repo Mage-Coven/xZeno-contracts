@@ -23,7 +23,7 @@ const QUERY_SIZE = 1000
 async function fetchAllStakers(): Promise<Array<Account>> {
     // TODO = it has a limit of 1000 accounts, it needs pagination to bring all accounts or find the way to pass "limit -1" to the query.
     // https://dune.com/queries/161334/315606
-    const gqlClient = new GraphQLClient("https://api.thegraph.com/subgraphs/name/mstable/mstable-staking")
+    const gqlClient = new GraphQLClient("https://api.thegraph.com/subgraphs/name/xzeno/xzeno-staking")
     const query = gql`{
         accounts(first: ${QUERY_SIZE}) {
           id

@@ -7,7 +7,7 @@ import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 
 /**
  * @title  RewardsDistributor
- * @author mStable
+ * @author xZeno
  * @notice RewardsDistributor allows Fund Managers to send rewards (usually in MTA)
  * to specified Reward Recipients.
  */
@@ -35,7 +35,7 @@ contract RewardsDistributor is ImmutableModule {
         _;
     }
 
-    /** @dev Recipient is a module, governed by mStable governance */
+    /** @dev Recipient is a module, governed by xZeno governance */
     constructor(address _nexus, address[] memory _fundManagers) ImmutableModule(_nexus) {
         for (uint256 i = 0; i < _fundManagers.length; i++) {
             _addFundManager(_fundManagers[i]);
@@ -43,7 +43,7 @@ contract RewardsDistributor is ImmutableModule {
     }
 
     /**
-     * @dev Allows the mStable governance to add a new FundManager
+     * @dev Allows the xZeno governance to add a new FundManager
      * @param _address  FundManager to add
      */
     function addFundManager(address _address) external onlyGovernor {
@@ -64,7 +64,7 @@ contract RewardsDistributor is ImmutableModule {
     }
 
     /**
-     * @dev Allows the mStable governance to remove inactive FundManagers
+     * @dev Allows the xZeno governance to remove inactive FundManagers
      * @param _address  FundManager to remove
      */
     function removeFundManager(address _address) external onlyGovernor {

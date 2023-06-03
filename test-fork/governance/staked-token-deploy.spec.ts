@@ -28,7 +28,7 @@ import {
     InstantProxyAdmin__factory,
     DelayedProxyAdmin,
     InstantProxyAdmin,
-    IMStableVoterProxy__factory,
+    IXZenoVoterProxy__factory,
     IncentivisedVotingLockup__factory,
     BoostedVault__factory,
     StakedToken,
@@ -43,7 +43,7 @@ import { getChainAddress, resolveAddress } from "../../tasks/utils/networkAddres
 
 const governorAddress = resolveAddress("Governor")
 const deployerAddress = resolveAddress("OperationsSigner")
-const mStableVoterProxy = resolveAddress("VoterProxy")
+const xZenoVoterProxy = resolveAddress("VoterProxy")
 const sharedBadgerGov = resolveAddress("BadgerSafe")
 const questSignerAddress = resolveAddress("QuestSigner")
 const ethWhaleAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
@@ -53,8 +53,8 @@ const staker2 = "0x0fc4b69958cb2fa320a96d54168b89953a953fbf"
 const staker3 = "0x25953c127efd1e15f4d2be82b753d49b12d626d7"
 
 const vaultAddresses = [
-    resolveAddress("mUSD", Chain.mainnet, "vault"),
-    resolveAddress("mBTC", Chain.mainnet, "vault"),
+    resolveAddress("zUSD", Chain.mainnet, "vault"),
+    resolveAddress("zBTC", Chain.mainnet, "vault"),
     resolveAddress("GUSD", Chain.mainnet, "vault"),
     resolveAddress("BUSD", Chain.mainnet, "vault"),
     resolveAddress("HBTC", Chain.mainnet, "vault"),
@@ -358,7 +358,7 @@ context("StakedToken deployments and vault upgrades", () => {
                 )
         })
         it.skip("whitelists Badger voterproxy", async () => {
-            await deployedContracts.stakedTokenMTA.connect(governor).whitelistWrapper(mStableVoterProxy)
+            await deployedContracts.stakedTokenMTA.connect(governor).whitelistWrapper(xZenoVoterProxy)
         })
     })
     context("3. Vault upgrades", () => {
@@ -377,7 +377,7 @@ context("StakedToken deployments and vault upgrades", () => {
 
                 console.log(`About to verify the ${vault.underlyingTokenSymbol} vault`)
 
-                if (vault.underlyingTokenSymbol !== "mUSD") {
+                if (vault.underlyingTokenSymbol !== "zUSD") {
                     expect(await proxy.name(), `${vault.underlyingTokenSymbol} vault name`).to.eq(vault.name)
                     expect(await proxy.symbol(), `${vault.underlyingTokenSymbol} vault symbol`).to.eq(vault.symbol)
                     expect(await proxy.decimals(), `${vault.underlyingTokenSymbol} decimals`).to.eq(18)
@@ -541,8 +541,8 @@ context("StakedToken deployments and vault upgrades", () => {
             assertBNClosePercent(boost2after, calcBoost(rawBal2, simpleToExactAmount(100000).div(12)), "0.001")
 
             // staker 3 (no stake) poke boost and see it go to 0 multiplier
-            const mbtcVaultAddress = resolveAddress("mBTC", Chain.mainnet, "vault")
-            const btcPool = BoostedVault__factory.connect(mbtcVaultAddress, staker2signer)
+            const zbtcVaultAddress = resolveAddress("zBTC", Chain.mainnet, "vault")
+            const btcPool = BoostedVault__factory.connect(zbtcVaultAddress, staker2signer)
             const boost3 = await btcPool.getBoost(staker3)
             await btcPool.pokeBoost(staker3)
             const boost3after = await btcPool.getBoost(staker3)
@@ -681,7 +681,7 @@ context("StakedToken deployments and vault upgrades", () => {
     context("6. Test Badger migration", () => {
         it("should allow badger to stake in new contract", async () => {
             const badgerGovSigner = await impersonate(sharedBadgerGov)
-            const voterProxy = IMStableVoterProxy__factory.connect(mStableVoterProxy, badgerGovSigner)
+            const voterProxy = IXZenoVoterProxy__factory.connect(xZenoVoterProxy, badgerGovSigner)
             // 1. it should fail to change addr unless exited - this can be skipped as bias is now 0
             // await expect(voterProxy.changeLockAddress(deployedContracts.stakedTokenMTA.address)).to.be.revertedWith("Active lockup")
             // 2. Exit from old (exit)
@@ -723,11 +723,11 @@ interface VaultData {
 const btcPriceCoeff = simpleToExactAmount(48000)
 const vaults: VaultData[] = [
     {
-        underlyingTokenSymbol: "mBTC",
+        underlyingTokenSymbol: "zBTC",
         stakingTokenType: "savings",
         priceCoeff: btcPriceCoeff.div(10),
-        name: "imBTC Vault",
-        symbol: "v-imBTC",
+        name: "izBTC Vault",
+        symbol: "v-izBTC",
         userBal: {
             user: "0x25953c127efd1e15f4d2be82b753d49b12d626d7",
             balance: simpleToExactAmount(172),
@@ -736,8 +736,8 @@ const vaults: VaultData[] = [
     {
         underlyingTokenSymbol: "GUSD",
         stakingTokenType: "feederPool",
-        name: "mUSD/GUSD fPool Vault",
-        symbol: "v-fPmUSD/GUSD",
+        name: "zUSD/GUSD fPool Vault",
+        symbol: "v-fPzUSD/GUSD",
         userBal: {
             user: "0xf794CF2d946BC6eE6eD905F47db211EBd451Aa5F",
             balance: simpleToExactAmount(425000),
@@ -746,8 +746,8 @@ const vaults: VaultData[] = [
     {
         underlyingTokenSymbol: "BUSD",
         stakingTokenType: "feederPool",
-        name: "mUSD/BUSD fPool Vault",
-        symbol: "v-fPmUSD/BUSD",
+        name: "zUSD/BUSD fPool Vault",
+        symbol: "v-fPzUSD/BUSD",
         userBal: {
             user: "0xc09111f9d094d07fc013fd45c4081510ca4275cf",
             balance: simpleToExactAmount(1400000),
@@ -757,8 +757,8 @@ const vaults: VaultData[] = [
         underlyingTokenSymbol: "HBTC",
         stakingTokenType: "feederPool",
         priceCoeff: btcPriceCoeff,
-        name: "mBTC/HBTC fPool Vault",
-        symbol: "v-fPmBTC/HBTC",
+        name: "zBTC/HBTC fPool Vault",
+        symbol: "v-fPzBTC/HBTC",
         userBal: {
             user: "0x8d0f5678557192e23d1da1c689e40f25c063eaa5",
             balance: simpleToExactAmount(2.4),
@@ -768,8 +768,8 @@ const vaults: VaultData[] = [
         underlyingTokenSymbol: "TBTC",
         stakingTokenType: "feederPool",
         priceCoeff: btcPriceCoeff,
-        name: "mBTC/TBTC fPool Vault",
-        symbol: "v-fPmBTC/TBTC",
+        name: "zBTC/TBTC fPool Vault",
+        symbol: "v-fPzBTC/TBTC",
         userBal: {
             user: "0x8d0f5678557192e23d1da1c689e40f25c063eaa5",
             balance: simpleToExactAmount(6.5),
@@ -778,8 +778,8 @@ const vaults: VaultData[] = [
     {
         underlyingTokenSymbol: "alUSD",
         stakingTokenType: "feederPool",
-        name: "mUSD/alUSD fPool Vault",
-        symbol: "v-fPmUSD/alUSD",
+        name: "zUSD/alUSD fPool Vault",
+        symbol: "v-fPzUSD/alUSD",
         platformToken: "ALCX",
         userBal: {
             user: "0x97020c9ec66e0f59231918b1d2f167a66026aff2",
@@ -787,11 +787,11 @@ const vaults: VaultData[] = [
         },
     },
     {
-        underlyingTokenSymbol: "mUSD",
+        underlyingTokenSymbol: "zUSD",
         stakingTokenType: "savings",
         priceCoeff: simpleToExactAmount(1, 17),
-        name: "imUSD Vault",
-        symbol: "v-imUSD",
+        name: "izUSD Vault",
+        symbol: "v-izUSD",
         userBal: {
             user: "0x7606ccf1c5f2a908423eb8dd2fa5d82a12255700",
             balance: simpleToExactAmount(68000),

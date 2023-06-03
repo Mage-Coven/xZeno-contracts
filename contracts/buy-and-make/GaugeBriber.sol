@@ -8,18 +8,18 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 
 /**
  * @title   GaugeBriber
- * @author  mStable
- * @notice  Collect system revenue in mUSD, converts to MTA, funds bribe on Votium
+ * @author  xZeno
+ * @notice  Collect system revenue in zUSD, converts to MTA, funds bribe on Votium
  * @dev     VERSION: 1.0
  *          DATE:    2021-10-19
  */
 contract GaugeBriber is IRevenueRecipient, ImmutableModule {
     using SafeERC20 for IERC20;
 
-    event RevenueReceived(address indexed mAsset, uint256 amountIn);
+    event RevenueReceived(address indexed zAsset, uint256 amountIn);
     event Withdrawn(uint256 amountOut, uint256 amountToChild);
 
-    IERC20 public immutable musd;
+    IERC20 public immutable zusd;
 
     address public immutable keeper;
     address public briber;
@@ -31,12 +31,12 @@ contract GaugeBriber is IRevenueRecipient, ImmutableModule {
 
     constructor(
         address _nexus,
-        address _musd,
+        address _zusd,
         address _keeper,
         address _briber,
         address _childRecipient
     ) ImmutableModule(_nexus) {
-        musd = IERC20(_musd);
+        zusd = IERC20(_zusd);
         keeper = _keeper;
         briber = _briber;
         childRecipient = IRevenueRecipient(_childRecipient);
@@ -48,19 +48,19 @@ contract GaugeBriber is IRevenueRecipient, ImmutableModule {
     }
 
     /**
-     * @dev Simply transfers the mAsset from the sender to here
-     * @param _mAsset Address of mAsset
-     * @param _amount Units of mAsset collected
+     * @dev Simply transfers the zAsset from the sender to here
+     * @param _zAsset Address of zAsset
+     * @param _amount Units of zAsset collected
      */
-    function notifyRedistributionAmount(address _mAsset, uint256 _amount) external override {
-        require(_mAsset == address(musd), "This Recipient is only for mUSD");
+    function notifyRedistributionAmount(address _zAsset, uint256 _amount) external override {
+        require(_zAsset == address(zusd), "This Recipient is only for zUSD");
         // Transfer from sender to here
-        IERC20(_mAsset).safeTransferFrom(msg.sender, address(this), _amount);
+        IERC20(_zAsset).safeTransferFrom(msg.sender, address(this), _amount);
 
         available[0] += ((_amount * (1e18 - feeSplit)) / 1e18);
         available[1] += ((_amount * feeSplit) / 1e18);
 
-        emit RevenueReceived(_mAsset, _amount);
+        emit RevenueReceived(_zAsset, _amount);
     }
 
     /**
@@ -69,12 +69,12 @@ contract GaugeBriber is IRevenueRecipient, ImmutableModule {
     function forward() external keeperOrGovernor {
         uint256 amt = available[0];
         available[0] = 0;
-        musd.safeTransfer(briber, amt);
+        zusd.safeTransfer(briber, amt);
 
         uint256 amtChild = available[1];
         if (amtChild > 0) {
             available[1] = 0;
-            childRecipient.notifyRedistributionAmount(address(musd), amtChild);
+            childRecipient.notifyRedistributionAmount(address(zusd), amtChild);
         }
         emit Withdrawn(amt, amtChild);
     }
@@ -101,7 +101,7 @@ contract GaugeBriber is IRevenueRecipient, ImmutableModule {
      * @dev Abstract override
      */
     function depositToPool(
-        address[] calldata, /* _mAssets */
+        address[] calldata, /* _zAssets */
         uint256[] calldata /* _percentages */
     ) external override {}
 }

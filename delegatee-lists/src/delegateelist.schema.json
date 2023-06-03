@@ -1,0 +1,316 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://xzeno.org/delegateelist.schema.json",
+  "title": "xZeno Delegatee List",
+  "description": "Schema for lists of delegatees compatible with the xZeno Governance app",
+  "definitions": {
+    "Version": {
+      "type": "object",
+      "description": "The version of the list, used in change detection",
+      "examples": [
+        {
+          "major": 1,
+          "minor": 0,
+          "patch": 0
+        }
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "major": {
+          "type": "integer",
+          "description": "The major version of the list. Must be incremented when delegatees are removed from the list or delegatee addresses are changed.",
+          "minimum": 0,
+          "examples": [
+            1,
+            2
+          ]
+        },
+        "minor": {
+          "type": "integer",
+          "description": "The minor version of the list. Must be incremented when delegatees are added to the list.",
+          "minimum": 0,
+          "examples": [
+            0,
+            1
+          ]
+        },
+        "patch": {
+          "type": "integer",
+          "description": "The patch version of the list. Must be incremented for any changes to the list.",
+          "minimum": 0,
+          "examples": [
+            0,
+            1
+          ]
+        }
+      },
+      "required": [
+        "major",
+        "minor",
+        "patch"
+      ]
+    },
+    "TagIdentifier": {
+      "type": "string",
+      "description": "The unique identifier of a tag",
+      "minLength": 1,
+      "maxLength": 30,
+      "pattern": "^[\\w]+$",
+      "examples": [
+        "community"
+      ]
+    },
+    "ExtensionIdentifier": {
+      "type": "string",
+      "description": "The name of a delegatee extension property",
+      "minLength": 1,
+      "maxLength": 30,
+      "pattern": "^[\\w]+$",
+      "examples": [
+        "preferred_lambo_colour",
+        "aliases"
+      ]
+    },
+    "ExtensionValue": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 42,
+          "examples": [
+            "#ff000"
+          ]
+        },
+        {
+          "type": "boolean",
+          "examples": [
+            true
+          ]
+        },
+        {
+          "type": "number",
+          "examples": [
+            15
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "TagDefinition": {
+      "type": "object",
+      "description": "Definition of a tag that can be associated with a delegatee via its identifier",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the tag",
+          "pattern": "^[ \\w]+$",
+          "minLength": 1,
+          "maxLength": 20
+        },
+        "description": {
+          "type": "string",
+          "description": "A user-friendly description of the tag",
+          "pattern": "^[ \\w\\.,:]+$",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "name",
+        "description"
+      ],
+      "examples": [
+        {
+          "name": "Community",
+          "description": "From the community"
+        }
+      ]
+    },
+    "DelegateeInfo": {
+      "type": "object",
+      "description": "Metadata for a single delegatee in a delegatee list",
+      "additionalProperties": false,
+      "properties": {
+        "chainId": {
+          "type": "integer",
+          "description": "The chain ID of the Ethereum network where this delegatee is operating",
+          "minimum": 1,
+          "examples": [
+            1,
+            42
+          ]
+        },
+        "address": {
+          "type": "string",
+          "description": "The checksummed address of the delegatee on the specified chain ID",
+          "pattern": "^0x[a-fA-F0-9]{40}$",
+          "examples": [
+            "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+          ]
+        },
+        "ensName": {
+          "type": "string",
+          "description": "The ENS name delegatee on the specified chain ID",
+          "pattern": "^([0-9a-zA-Z]{1,}[0-9a-zA-Z\\-]{0,}[\\.]){1,}[a-zA-Z]{2,}$",
+          "examples": [
+            "alice.eth"
+          ]
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The display name of the delegatee",
+          "minLength": 1,
+          "maxLength": 40,
+          "examples": [
+            "Anthony Sassano"
+          ]
+        },
+        "bio": {
+          "type": "string",
+          "description": "The brief bio of the delegatee",
+          "minLength": 1,
+          "maxLength": 280,
+          "examples": [
+            "Experienced Cyber Security professional with a demonstrated history of working in the telecommunications and banking industry"
+          ]
+        },
+        "profileURI": {
+          "type": "string",
+          "description": "The URI to the delegatee's primary social profile or website",
+          "format": "uri",
+          "examples": [
+            "https://thedailygwei.substack.com"
+          ]
+        },
+        "avatarURI": {
+          "type": "string",
+          "description": "A URI to the delegatee avatar; if not set, interface will attempt to find an avatar based on the delegatee address; suggest SVG or PNG of size 64x64",
+          "format": "uri",
+          "examples": [
+            "ipfs://QmXfzKRvjZz3u5JRgC4v5mGVbm9ahrUiB4DgzHBsnWbTMM"
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "description": "An array of tag identifiers associated with the delegatee; tags are defined at the list level",
+          "items": {
+            "$ref": "#/definitions/TagIdentifier"
+          },
+          "maxItems": 10,
+          "examples": [
+            "community",
+            "dao"
+          ]
+        },
+        "extensions": {
+          "type": "object",
+          "description": "An object containing any arbitrary or vendor-specific delegatee metadata",
+          "propertyNames": {
+            "$ref": "#/definitions/ExtensionIdentifier"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/ExtensionValue"
+          },
+          "maxProperties": 10,
+          "examples": [
+            {
+              "preferred_lambo_colour": "#ff0000"
+            }
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "required": ["chainId", "address"]
+        },
+        {
+          "required": ["chainId", "ensName"]
+        }
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the delegatee list",
+      "minLength": 1,
+      "maxLength": 20,
+      "pattern": "^[\\w ]+$",
+      "examples": [
+        "My Delegatee List"
+      ]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp of this list version; i.e. when this immutable version of the list was created"
+    },
+    "version": {
+      "$ref": "#/definitions/Version"
+    },
+    "delegatees": {
+      "type": "array",
+      "description": "The list of delegatees included in the list",
+      "items": {
+        "$ref": "#/definitions/DelegateeInfo"
+      },
+      "minItems": 1,
+      "maxItems": 10000
+    },
+    "keywords": {
+      "type": "array",
+      "description": "Keywords associated with the contents of the list; may be used in list discoverability",
+      "items": {
+        "type": "string",
+        "description": "A keyword to describe the contents of the list",
+        "minLength": 1,
+        "maxLength": 20,
+        "pattern": "^[\\w ]+$",
+        "examples": [
+          "official",
+          "community"
+        ]
+      },
+      "maxItems": 20,
+      "uniqueItems": true
+    },
+    "tags": {
+      "type": "object",
+      "description": "A mapping of tag identifiers to their name and description",
+      "propertyNames": {
+        "$ref": "#/definitions/TagIdentifier"
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/TagDefinition"
+      },
+      "maxProperties": 20,
+      "examples": [
+        {
+          "community": {
+            "name": "Community",
+            "description": "From the xZeno community"
+          }
+        }
+      ]
+    },
+    "logoURI": {
+      "type": "string",
+      "description": "A URI for the logo of the delegatee list; prefer SVG or PNG of size 256x256",
+      "format": "uri",
+      "examples": [
+        "ipfs://QmXfzKRvjZz3u5JRgC4v5mGVbm9ahrUiB4DgzHBsnWbTMM"
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "timestamp",
+    "version",
+    "delegatees"
+  ]
+}

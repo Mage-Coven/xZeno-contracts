@@ -2,7 +2,7 @@ import { ethers } from "hardhat"
 import { expect } from "chai"
 
 import { simpleToExactAmount } from "@utils/math"
-import { MassetMachine, StandardAccounts } from "@utils/machines"
+import { ZassetMachine, StandardAccounts } from "@utils/machines"
 
 import {
     MockERC20,
@@ -15,8 +15,8 @@ import {
     EmissionsController,
     MockStakingContract,
     MockStakingContract__factory,
-    MockMasset__factory,
-    MockMasset,
+    MockZasset__factory,
+    MockZasset,
     EmissionsController__factory,
 } from "types/generated"
 import { EncodedPaths, encodeUniswapPath } from "@utils/peripheral/uniswap"
@@ -26,11 +26,11 @@ import { MCCP24_CONFIG } from "tasks/utils/emissions-utils"
 
 describe("RevenueSplitBuyBack", () => {
     let sa: StandardAccounts
-    let mAssetMachine: MassetMachine
+    let zAssetMachine: ZassetMachine
     let nexus: MockNexus
     let revenueBuyBack: RevenueSplitBuyBack
-    let mUSD: MockMasset
-    let mBTC: MockMasset
+    let zUSD: MockZasset
+    let zBTC: MockZasset
     let bAsset1: MockERC20
     let bAsset2: MockERC20
     let rewardsToken: MockERC20
@@ -38,30 +38,30 @@ describe("RevenueSplitBuyBack", () => {
     let staking2: MockStakingContract
     let emissionController: EmissionsController
     let uniswap: MockUniswapV3
-    let uniswapMusdBasset1Paths: EncodedPaths
-    let uniswapMbtcBasset2Paths: EncodedPaths
+    let uniswapZusdBasset1Paths: EncodedPaths
+    let uniswapZbtcBasset2Paths: EncodedPaths
 
     const treasuryFee = simpleToExactAmount(0.4)
     const treasury: Signer = ethers.Wallet.createRandom()
 
     /*
         Test Data
-        mAssets: mUSD and mBTC with 18 decimals
+        zAssets: zUSD and zBTC with 18 decimals
      */
     const setupRevenueBuyBack = async (_treasuryFee: BigNumber): Promise<void> => {
-        mUSD = await new MockMasset__factory(sa.default.signer).deploy(
+        zUSD = await new MockZasset__factory(sa.default.signer).deploy(
             "meta USD",
-            "mUSD",
+            "zUSD",
             18,
             sa.default.address,
             simpleToExactAmount(1000000),
         )
-        bAsset1 = await mAssetMachine.loadBassetProxy("USD bAsset", "bUSD", 18)
+        bAsset1 = await zAssetMachine.loadBassetProxy("USD bAsset", "bUSD", 18)
 
-        mBTC = await new MockMasset__factory(sa.default.signer).deploy("meta BTC", "mBTC", 18, sa.default.address, simpleToExactAmount(100))
-        bAsset2 = await mAssetMachine.loadBassetProxy("USD bAsset", "bUSD", 6)
+        zBTC = await new MockZasset__factory(sa.default.signer).deploy("meta BTC", "zBTC", 18, sa.default.address, simpleToExactAmount(100))
+        bAsset2 = await zAssetMachine.loadBassetProxy("USD bAsset", "bUSD", 6)
 
-        rewardsToken = await mAssetMachine.loadBassetProxy("Rewards Token", "RWD", 18)
+        rewardsToken = await zAssetMachine.loadBassetProxy("Rewards Token", "RWD", 18)
 
         // staking contracts
         staking1 = await new MockStakingContract__factory(sa.default.signer).deploy()
@@ -85,8 +85,8 @@ describe("RevenueSplitBuyBack", () => {
         await uniswap.setRate(bAsset1.address, rewardsToken.address, simpleToExactAmount(80, 16)) // 0.8 MTA/USD
         await uniswap.setRate(bAsset2.address, rewardsToken.address, simpleToExactAmount(50, 33)) // 50,000 MTA/BTC
         // Uniswap paths
-        uniswapMusdBasset1Paths = encodeUniswapPath([bAsset1.address, DEAD_ADDRESS, rewardsToken.address], [3000, 3000])
-        uniswapMbtcBasset2Paths = encodeUniswapPath([bAsset2.address, DEAD_ADDRESS, rewardsToken.address], [3000, 3000])
+        uniswapZusdBasset1Paths = encodeUniswapPath([bAsset1.address, DEAD_ADDRESS, rewardsToken.address], [3000, 3000])
+        uniswapZbtcBasset2Paths = encodeUniswapPath([bAsset2.address, DEAD_ADDRESS, rewardsToken.address], [3000, 3000])
 
         // Deploy Emissions Controller
         emissionController = await new EmissionsController__factory(sa.default.signer).deploy(
@@ -112,15 +112,15 @@ describe("RevenueSplitBuyBack", () => {
         // reverse the order to make sure dial id != staking contract id for testing purposes
         await revenueBuyBack.initialize([1, 0], await treasury.getAddress(), _treasuryFee)
 
-        // Add config to buy rewards from mAssets
-        await revenueBuyBack.connect(sa.governor.signer).mapBasset(mUSD.address, bAsset1.address)
-        await revenueBuyBack.connect(sa.governor.signer).mapBasset(mBTC.address, bAsset2.address)
+        // Add config to buy rewards from zAssets
+        await revenueBuyBack.connect(sa.governor.signer).mapBasset(zUSD.address, bAsset1.address)
+        await revenueBuyBack.connect(sa.governor.signer).mapBasset(zBTC.address, bAsset2.address)
     }
 
     before(async () => {
         const accounts = await ethers.getSigners()
-        mAssetMachine = await new MassetMachine().initAccounts(accounts)
-        sa = mAssetMachine.sa
+        zAssetMachine = await new ZassetMachine().initAccounts(accounts)
+        sa = zAssetMachine.sa
     })
 
     describe("creating new instance", () => {
@@ -228,211 +228,211 @@ describe("RevenueSplitBuyBack", () => {
             await setupRevenueBuyBack(treasuryFee)
         })
         it("should simply transfer from the sender", async () => {
-            const senderBalBefore = await mUSD.balanceOf(sa.default.address)
-            const revenueBuyBackBalBefore = await mUSD.balanceOf(revenueBuyBack.address)
+            const senderBalBefore = await zUSD.balanceOf(sa.default.address)
+            const revenueBuyBackBalBefore = await zUSD.balanceOf(revenueBuyBack.address)
             const notificationAmount = simpleToExactAmount(100, 18)
             expect(senderBalBefore.gte(notificationAmount), "sender rewards bal before").to.eq(true)
 
             // approve
-            await mUSD.approve(revenueBuyBack.address, notificationAmount)
+            await zUSD.approve(revenueBuyBack.address, notificationAmount)
             // call
-            const tx = revenueBuyBack.notifyRedistributionAmount(mUSD.address, notificationAmount)
-            await expect(tx).to.emit(revenueBuyBack, "RevenueReceived").withArgs(mUSD.address, notificationAmount)
+            const tx = revenueBuyBack.notifyRedistributionAmount(zUSD.address, notificationAmount)
+            await expect(tx).to.emit(revenueBuyBack, "RevenueReceived").withArgs(zUSD.address, notificationAmount)
 
-            // check output balances: mAsset sender/recipient
-            expect(await mUSD.balanceOf(sa.default.address), "mUSD sender bal after").eq(senderBalBefore.sub(notificationAmount))
-            expect(await mUSD.balanceOf(revenueBuyBack.address), "mUSD RevenueBuyBack bal after").eq(
+            // check output balances: zAsset sender/recipient
+            expect(await zUSD.balanceOf(sa.default.address), "zUSD sender bal after").eq(senderBalBefore.sub(notificationAmount))
+            expect(await zUSD.balanceOf(revenueBuyBack.address), "zUSD RevenueBuyBack bal after").eq(
                 revenueBuyBackBalBefore.add(notificationAmount),
             )
         })
         describe("it should fail if", () => {
-            it("not configured mAsset", async () => {
+            it("not configured zAsset", async () => {
                 await expect(revenueBuyBack.notifyRedistributionAmount(sa.dummy1.address, simpleToExactAmount(1, 18))).to.be.revertedWith(
-                    "Invalid mAsset",
+                    "Invalid zAsset",
                 )
             })
             it("approval is not given from sender", async () => {
-                await expect(revenueBuyBack.notifyRedistributionAmount(mUSD.address, simpleToExactAmount(100, 18))).to.be.revertedWith(
+                await expect(revenueBuyBack.notifyRedistributionAmount(zUSD.address, simpleToExactAmount(100, 18))).to.be.revertedWith(
                     "ERC20: transfer amount exceeds allowance",
                 )
             })
             it("sender has insufficient balance", async () => {
-                await mUSD.transfer(sa.dummy1.address, simpleToExactAmount(1, 18))
-                await mUSD.connect(sa.dummy1.signer).approve(revenueBuyBack.address, simpleToExactAmount(100))
+                await zUSD.transfer(sa.dummy1.address, simpleToExactAmount(1, 18))
+                await zUSD.connect(sa.dummy1.signer).approve(revenueBuyBack.address, simpleToExactAmount(100))
                 await expect(
-                    revenueBuyBack.connect(sa.dummy1.signer).notifyRedistributionAmount(mUSD.address, simpleToExactAmount(2, 18)),
+                    revenueBuyBack.connect(sa.dummy1.signer).notifyRedistributionAmount(zUSD.address, simpleToExactAmount(2, 18)),
                 ).to.be.revertedWith("ERC20: transfer amount exceeds balance")
             })
         })
     })
     describe("buy back MTA rewards", () => {
-        const musdRevenue = simpleToExactAmount(20000)
-        const mbtcRevenue = simpleToExactAmount(2)
+        const zusdRevenue = simpleToExactAmount(20000)
+        const zbtcRevenue = simpleToExactAmount(2)
         let bAsset1Amount: BigNumber
         let bAsset2Amount: BigNumber
-        let musdRewardsAmount: BigNumber
-        let mbtcRewardsAmount: BigNumber
+        let zusdRewardsAmount: BigNumber
+        let zbtcRewardsAmount: BigNumber
         beforeEach(async () => {
             await setupRevenueBuyBack(treasuryFee)
 
-            // Put some bAssets to the mAssets
-            await bAsset1.transfer(mUSD.address, musdRevenue)
-            await bAsset2.transfer(mBTC.address, mbtcRevenue.div(1e12))
+            // Put some bAssets to the zAssets
+            await bAsset1.transfer(zUSD.address, zusdRevenue)
+            await bAsset2.transfer(zBTC.address, zbtcRevenue.div(1e12))
 
             // Distribute revenue to RevenueBuyBack
-            await mUSD.approve(revenueBuyBack.address, musdRevenue)
-            await mBTC.approve(revenueBuyBack.address, mbtcRevenue)
-            await revenueBuyBack.notifyRedistributionAmount(mUSD.address, musdRevenue)
-            await revenueBuyBack.notifyRedistributionAmount(mBTC.address, mbtcRevenue)
+            await zUSD.approve(revenueBuyBack.address, zusdRevenue)
+            await zBTC.approve(revenueBuyBack.address, zbtcRevenue)
+            await revenueBuyBack.notifyRedistributionAmount(zUSD.address, zusdRevenue)
+            await revenueBuyBack.notifyRedistributionAmount(zBTC.address, zbtcRevenue)
 
             // bAssets bought = ((1e18 - treasury fee) / 1e18) * (98 / 100)
-            bAsset1Amount = musdRevenue.mul(simpleToExactAmount(1).sub(treasuryFee)).div(simpleToExactAmount(1)).mul(98).div(100)
+            bAsset1Amount = zusdRevenue.mul(simpleToExactAmount(1).sub(treasuryFee)).div(simpleToExactAmount(1)).mul(98).div(100)
             // Exchange rate = 0.80 MTA/USD = 8 / 18
             // Swap fee is 0.3% = 997 / 1000
-            musdRewardsAmount = bAsset1Amount.mul(8).div(10).mul(997).div(1000)
+            zusdRewardsAmount = bAsset1Amount.mul(8).div(10).mul(997).div(1000)
             // bAssets bought = ((1e18 - treasury fee) / 1e18 ) * (98 / 100) / 1e12
-            bAsset2Amount = mbtcRevenue.mul(simpleToExactAmount(1).sub(treasuryFee)).div(simpleToExactAmount(1)).mul(98).div(100).div(1e12)
+            bAsset2Amount = zbtcRevenue.mul(simpleToExactAmount(1).sub(treasuryFee)).div(simpleToExactAmount(1)).mul(98).div(100).div(1e12)
             // Exchange rate = 50,000 MTA/BTC
             // Swap fee is 0.3% = 997 / 1000
-            mbtcRewardsAmount = bAsset2Amount.mul(50000).mul(997).div(1000).mul(1e12)
+            zbtcRewardsAmount = bAsset2Amount.mul(50000).mul(997).div(1000).mul(1e12)
         })
-        it("should sell mUSD for MTA and send treasury fee to treasury", async () => {
-            expect(await mUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's mUSD Bal before").to.eq(musdRevenue)
-            expect(await bAsset1.balanceOf(mUSD.address), "mAsset's bAsset Bal before").to.eq(musdRevenue)
-            expect(await mUSD.balanceOf(await treasury.getAddress()), "treasury's mUSD Bal before").to.eq(0)
+        it("should sell zUSD for MTA and send treasury fee to treasury", async () => {
+            expect(await zUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's zUSD Bal before").to.eq(zusdRevenue)
+            expect(await bAsset1.balanceOf(zUSD.address), "zAsset's bAsset Bal before").to.eq(zusdRevenue)
+            expect(await zUSD.balanceOf(await treasury.getAddress()), "treasury's zUSD Bal before").to.eq(0)
             expect(await rewardsToken.balanceOf(revenueBuyBack.address), "revenueBuyBack's rewards Bal before").to.eq(0)
 
             const tx = revenueBuyBack
                 .connect(sa.keeper.signer)
-                .buyBackRewards([mUSD.address], [bAsset1Amount], [musdRewardsAmount], [uniswapMusdBasset1Paths.encoded])
-            const treasuryBal = musdRevenue.mul(treasuryFee).div(simpleToExactAmount(1))
-            const musdSold = musdRevenue.sub(treasuryBal)
-            await expect(tx).to.emit(revenueBuyBack, "BuyBackRewards").withArgs(mUSD.address, treasuryBal, musdSold, musdRewardsAmount)
+                .buyBackRewards([zUSD.address], [bAsset1Amount], [zusdRewardsAmount], [uniswapZusdBasset1Paths.encoded])
+            const treasuryBal = zusdRevenue.mul(treasuryFee).div(simpleToExactAmount(1))
+            const zusdSold = zusdRevenue.sub(treasuryBal)
+            await expect(tx).to.emit(revenueBuyBack, "BuyBackRewards").withArgs(zUSD.address, treasuryBal, zusdSold, zusdRewardsAmount)
 
-            expect(await mUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's mUSD Bal after").to.eq(0)
-            expect(await mUSD.balanceOf(await treasury.getAddress()), "treasury's mUSD Bal after").to.gt(0)
+            expect(await zUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's zUSD Bal after").to.eq(0)
+            expect(await zUSD.balanceOf(await treasury.getAddress()), "treasury's zUSD Bal after").to.gt(0)
             expect(await rewardsToken.balanceOf(revenueBuyBack.address), "revenueBuyBack's rewards Bal after").to.gt(0)
         })
-        it("should sell mBTC for MTA and send treasury fee to treasury", async () => {
-            expect(await mBTC.balanceOf(revenueBuyBack.address), "revenueBuyBack's mBTC Bal before").to.eq(mbtcRevenue)
-            expect(await bAsset2.balanceOf(mBTC.address), "mAsset's bAsset Bal before").to.eq(mbtcRevenue.div(1e12))
-            expect(await mUSD.balanceOf(await treasury.getAddress()), "treasury's mUSD Bal before").to.eq(0)
+        it("should sell zBTC for MTA and send treasury fee to treasury", async () => {
+            expect(await zBTC.balanceOf(revenueBuyBack.address), "revenueBuyBack's zBTC Bal before").to.eq(zbtcRevenue)
+            expect(await bAsset2.balanceOf(zBTC.address), "zAsset's bAsset Bal before").to.eq(zbtcRevenue.div(1e12))
+            expect(await zUSD.balanceOf(await treasury.getAddress()), "treasury's zUSD Bal before").to.eq(0)
 
             const tx = revenueBuyBack
                 .connect(sa.keeper.signer)
-                .buyBackRewards([mBTC.address], [bAsset2Amount], [mbtcRewardsAmount], [uniswapMbtcBasset2Paths.encoded])
+                .buyBackRewards([zBTC.address], [bAsset2Amount], [zbtcRewardsAmount], [uniswapZbtcBasset2Paths.encoded])
 
-            const treasuryBal = mbtcRevenue.mul(treasuryFee).div(simpleToExactAmount(1))
-            const mbtcSold = mbtcRevenue.sub(treasuryBal)
-            await expect(tx).to.emit(revenueBuyBack, "BuyBackRewards").withArgs(mBTC.address, treasuryBal, mbtcSold, mbtcRewardsAmount)
+            const treasuryBal = zbtcRevenue.mul(treasuryFee).div(simpleToExactAmount(1))
+            const zbtcSold = zbtcRevenue.sub(treasuryBal)
+            await expect(tx).to.emit(revenueBuyBack, "BuyBackRewards").withArgs(zBTC.address, treasuryBal, zbtcSold, zbtcRewardsAmount)
 
-            expect(await mBTC.balanceOf(revenueBuyBack.address), "revenueBuyBack's mBTC Bal after").to.eq(0)
-            expect(await mBTC.balanceOf(await treasury.getAddress()), "treasury's mUSD Bal after").to.gt(0)
+            expect(await zBTC.balanceOf(revenueBuyBack.address), "revenueBuyBack's zBTC Bal after").to.eq(0)
+            expect(await zBTC.balanceOf(await treasury.getAddress()), "treasury's zUSD Bal after").to.gt(0)
         })
-        it("should sell mUSD and mBTC for MTA and send treasury fee to treasury", async () => {
+        it("should sell zUSD and zBTC for MTA and send treasury fee to treasury", async () => {
             const tx = revenueBuyBack
                 .connect(sa.keeper.signer)
                 .buyBackRewards(
-                    [mUSD.address, mBTC.address],
+                    [zUSD.address, zBTC.address],
                     [bAsset1Amount, bAsset2Amount],
-                    [musdRewardsAmount, mbtcRewardsAmount],
-                    [uniswapMusdBasset1Paths.encoded, uniswapMbtcBasset2Paths.encoded],
+                    [zusdRewardsAmount, zbtcRewardsAmount],
+                    [uniswapZusdBasset1Paths.encoded, uniswapZbtcBasset2Paths.encoded],
                 )
 
-            const musdTreasuryBal = musdRevenue.mul(treasuryFee).div(simpleToExactAmount(1))
-            const musdSold = musdRevenue.sub(musdTreasuryBal)
-            await expect(tx).to.emit(revenueBuyBack, "BuyBackRewards").withArgs(mUSD.address, musdTreasuryBal, musdSold, musdRewardsAmount)
+            const zusdTreasuryBal = zusdRevenue.mul(treasuryFee).div(simpleToExactAmount(1))
+            const zusdSold = zusdRevenue.sub(zusdTreasuryBal)
+            await expect(tx).to.emit(revenueBuyBack, "BuyBackRewards").withArgs(zUSD.address, zusdTreasuryBal, zusdSold, zusdRewardsAmount)
 
-            const mbtcTreasuryBal = mbtcRevenue.mul(treasuryFee).div(simpleToExactAmount(1))
-            const mbtcSold = mbtcRevenue.sub(mbtcTreasuryBal)
-            await expect(tx).to.emit(revenueBuyBack, "BuyBackRewards").withArgs(mBTC.address, mbtcTreasuryBal, mbtcSold, mbtcRewardsAmount)
+            const zbtcTreasuryBal = zbtcRevenue.mul(treasuryFee).div(simpleToExactAmount(1))
+            const zbtcSold = zbtcRevenue.sub(zbtcTreasuryBal)
+            await expect(tx).to.emit(revenueBuyBack, "BuyBackRewards").withArgs(zBTC.address, zbtcTreasuryBal, zbtcSold, zbtcRewardsAmount)
 
-            expect(await mUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's mUSD Bal after").to.eq(0)
-            expect(await mBTC.balanceOf(revenueBuyBack.address), "revenueBuyBack's mUSD Bal after").to.eq(0)
-            expect(await mUSD.balanceOf(await treasury.getAddress()), "treasury's mUSD Bal after").to.gt(0)
-            expect(await mBTC.balanceOf(await treasury.getAddress()), "treasury's mBTC Bal after").to.gt(0)
+            expect(await zUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's zUSD Bal after").to.eq(0)
+            expect(await zBTC.balanceOf(revenueBuyBack.address), "revenueBuyBack's zUSD Bal after").to.eq(0)
+            expect(await zUSD.balanceOf(await treasury.getAddress()), "treasury's zUSD Bal after").to.gt(0)
+            expect(await zBTC.balanceOf(await treasury.getAddress()), "treasury's zBTC Bal after").to.gt(0)
         })
-        it("should sell all mUSD for MTA with nothing to treasury", async () => {
+        it("should sell all zUSD for MTA with nothing to treasury", async () => {
             // Change config so no revenue is sent to treasury
             await revenueBuyBack.connect(sa.governor.signer).setTreasuryFee(0)
 
-            expect(await mUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's mUSD Bal before").to.eq(musdRevenue)
-            expect(await bAsset1.balanceOf(mUSD.address), "mAsset's bAsset Bal before").to.eq(musdRevenue)
-            expect(await mUSD.balanceOf(await treasury.getAddress()), "treasury's mUSD Bal before").to.eq(0)
+            expect(await zUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's zUSD Bal before").to.eq(zusdRevenue)
+            expect(await bAsset1.balanceOf(zUSD.address), "zAsset's bAsset Bal before").to.eq(zusdRevenue)
+            expect(await zUSD.balanceOf(await treasury.getAddress()), "treasury's zUSD Bal before").to.eq(0)
 
-            const fullBasset1Amount = musdRevenue.mul(98).div(100)
-            const fullMusdRewardsAmount = fullBasset1Amount.mul(8).div(10).mul(997).div(1000)
+            const fullBasset1Amount = zusdRevenue.mul(98).div(100)
+            const fullZusdRewardsAmount = fullBasset1Amount.mul(8).div(10).mul(997).div(1000)
 
             const tx = revenueBuyBack
                 .connect(sa.keeper.signer)
-                .buyBackRewards([mUSD.address], [fullBasset1Amount], [fullMusdRewardsAmount], [uniswapMusdBasset1Paths.encoded])
-            await expect(tx).to.emit(revenueBuyBack, "BuyBackRewards").withArgs(mUSD.address, 0, musdRevenue, fullMusdRewardsAmount)
+                .buyBackRewards([zUSD.address], [fullBasset1Amount], [fullZusdRewardsAmount], [uniswapZusdBasset1Paths.encoded])
+            await expect(tx).to.emit(revenueBuyBack, "BuyBackRewards").withArgs(zUSD.address, 0, zusdRevenue, fullZusdRewardsAmount)
 
-            expect(await mUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's mUSD Bal after").to.eq(0)
-            expect(await mUSD.balanceOf(await treasury.getAddress()), "treasury's mUSD Bal after").to.eq(0)
+            expect(await zUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's zUSD Bal after").to.eq(0)
+            expect(await zUSD.balanceOf(await treasury.getAddress()), "treasury's zUSD Bal after").to.eq(0)
         })
         it("should send all revenue to treasury with no buy back", async () => {
             // Change config so no revenue is sent to treasury
             await revenueBuyBack.connect(sa.governor.signer).setTreasuryFee(simpleToExactAmount(1))
 
-            expect(await mUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's mUSD Bal before").to.eq(musdRevenue)
-            expect(await bAsset1.balanceOf(mUSD.address), "mAsset's bAsset Bal before").to.eq(musdRevenue)
-            expect(await mUSD.balanceOf(await treasury.getAddress()), "treasury's mUSD Bal before").to.eq(0)
+            expect(await zUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's zUSD Bal before").to.eq(zusdRevenue)
+            expect(await bAsset1.balanceOf(zUSD.address), "zAsset's bAsset Bal before").to.eq(zusdRevenue)
+            expect(await zUSD.balanceOf(await treasury.getAddress()), "treasury's zUSD Bal before").to.eq(0)
 
-            const tx = revenueBuyBack.connect(sa.keeper.signer).buyBackRewards([mUSD.address], [0], [0], [uniswapMusdBasset1Paths.encoded])
-            await expect(tx).to.emit(revenueBuyBack, "BuyBackRewards").withArgs(mUSD.address, musdRevenue, 0, 0)
+            const tx = revenueBuyBack.connect(sa.keeper.signer).buyBackRewards([zUSD.address], [0], [0], [uniswapZusdBasset1Paths.encoded])
+            await expect(tx).to.emit(revenueBuyBack, "BuyBackRewards").withArgs(zUSD.address, zusdRevenue, 0, 0)
 
-            expect(await mUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's mUSD Bal after").to.eq(0)
-            expect(await mUSD.balanceOf(await treasury.getAddress()), "treasury's mUSD Bal after").to.eq(musdRevenue)
+            expect(await zUSD.balanceOf(revenueBuyBack.address), "revenueBuyBack's zUSD Bal after").to.eq(0)
+            expect(await zUSD.balanceOf(await treasury.getAddress()), "treasury's zUSD Bal after").to.eq(zusdRevenue)
         })
         describe("should fail when", () => {
             it("Not keeper or governor", async () => {
                 const tx = revenueBuyBack.buyBackRewards(
-                    [mUSD.address],
+                    [zUSD.address],
                     [bAsset1Amount],
-                    [musdRewardsAmount],
-                    [uniswapMusdBasset1Paths.encoded],
+                    [zusdRewardsAmount],
+                    [uniswapZusdBasset1Paths.encoded],
                 )
                 await expect(tx).to.revertedWith("Only keeper or governor")
             })
-            it("No mAssets", async () => {
+            it("No zAssets", async () => {
                 const tx = revenueBuyBack.connect(sa.keeper.signer).buyBackRewards([], [], [], [])
-                await expect(tx).to.revertedWith("Invalid mAssets")
+                await expect(tx).to.revertedWith("Invalid zAssets")
             })
-            it("Not a mAsset", async () => {
+            it("Not a zAsset", async () => {
                 const tx = revenueBuyBack
                     .connect(sa.keeper.signer)
-                    .buyBackRewards([rewardsToken.address], [bAsset1Amount], [musdRewardsAmount], [uniswapMusdBasset1Paths.encoded])
-                await expect(tx).to.revertedWith("Invalid mAsset")
+                    .buyBackRewards([rewardsToken.address], [bAsset1Amount], [zusdRewardsAmount], [uniswapZusdBasset1Paths.encoded])
+                await expect(tx).to.revertedWith("Invalid zAsset")
             })
             it("No minBassetsAmounts", async () => {
                 const tx = revenueBuyBack
                     .connect(sa.keeper.signer)
-                    .buyBackRewards([mUSD.address], [], [musdRewardsAmount], [uniswapMusdBasset1Paths.encoded])
+                    .buyBackRewards([zUSD.address], [], [zusdRewardsAmount], [uniswapZusdBasset1Paths.encoded])
                 await expect(tx).to.revertedWith("Invalid minBassetsAmounts")
             })
             it("as minBassetsAmounts is too high", async () => {
                 const tx = revenueBuyBack
                     .connect(sa.keeper.signer)
-                    .buyBackRewards([mUSD.address], [bAsset1Amount.add(1)], [musdRewardsAmount], [uniswapMusdBasset1Paths.encoded])
+                    .buyBackRewards([zUSD.address], [bAsset1Amount.add(1)], [zusdRewardsAmount], [uniswapZusdBasset1Paths.encoded])
                 await expect(tx).to.revertedWith("bAsset qty < min qty")
                 expect(await rewardsToken.balanceOf(revenueBuyBack.address), "RevenueBuyBack MTA bal after").to.eq(0)
             })
             it("No minRewardsAmounts", async () => {
                 const tx = revenueBuyBack
                     .connect(sa.keeper.signer)
-                    .buyBackRewards([mUSD.address], [bAsset1Amount], [], [uniswapMusdBasset1Paths.encoded])
+                    .buyBackRewards([zUSD.address], [bAsset1Amount], [], [uniswapZusdBasset1Paths.encoded])
                 await expect(tx).to.revertedWith("Invalid minRewardsAmounts")
             })
             it("as minRewardsAmounts is too high", async () => {
                 const tx = revenueBuyBack
                     .connect(sa.keeper.signer)
-                    .buyBackRewards([mUSD.address], [bAsset1Amount], [musdRewardsAmount.add(1)], [uniswapMusdBasset1Paths.encoded])
+                    .buyBackRewards([zUSD.address], [bAsset1Amount], [zusdRewardsAmount.add(1)], [uniswapZusdBasset1Paths.encoded])
                 await expect(tx).to.revertedWith("Too little received")
                 expect(await rewardsToken.balanceOf(revenueBuyBack.address), "RevenueBuyBack MTA bal after").to.eq(0)
             })
             it("No uniswapPaths", async () => {
-                const tx = revenueBuyBack.connect(sa.keeper.signer).buyBackRewards([mUSD.address], [bAsset1Amount], [musdRewardsAmount], [])
+                const tx = revenueBuyBack.connect(sa.keeper.signer).buyBackRewards([zUSD.address], [bAsset1Amount], [zusdRewardsAmount], [])
                 await expect(tx).to.revertedWith("Invalid uniswapPaths")
                 expect(await rewardsToken.balanceOf(revenueBuyBack.address), "RevenueBuyBack MTA bal after").to.eq(0)
             })
@@ -440,29 +440,29 @@ describe("RevenueSplitBuyBack", () => {
                 it("zero", async () => {
                     const tx = revenueBuyBack
                         .connect(sa.keeper.signer)
-                        .buyBackRewards([mUSD.address], [bAsset1Amount], [musdRewardsAmount], ["0x"])
+                        .buyBackRewards([zUSD.address], [bAsset1Amount], [zusdRewardsAmount], ["0x"])
                     await expect(tx).to.revertedWith("Uniswap path too short")
                 })
-                it("from mAsset to rewards", async () => {
-                    const uniswapNewPaths = encodeUniswapPath([mUSD.address, DEAD_ADDRESS, rewardsToken.address], [3000, 3000])
+                it("from zAsset to rewards", async () => {
+                    const uniswapNewPaths = encodeUniswapPath([zUSD.address, DEAD_ADDRESS, rewardsToken.address], [3000, 3000])
 
                     const tx = revenueBuyBack
                         .connect(sa.keeper.signer)
-                        .buyBackRewards([mUSD.address], [bAsset1Amount], [musdRewardsAmount], [uniswapNewPaths.encoded])
+                        .buyBackRewards([zUSD.address], [bAsset1Amount], [zusdRewardsAmount], [uniswapNewPaths.encoded])
                     await expect(tx).to.revertedWith("Invalid uniswap path")
                 })
-                it("from bAsset to mAsset", async () => {
-                    const uniswapNewPaths = encodeUniswapPath([bAsset1.address, DEAD_ADDRESS, mUSD.address], [3000, 3000])
+                it("from bAsset to zAsset", async () => {
+                    const uniswapNewPaths = encodeUniswapPath([bAsset1.address, DEAD_ADDRESS, zUSD.address], [3000, 3000])
                     const tx = revenueBuyBack
                         .connect(sa.keeper.signer)
-                        .buyBackRewards([mUSD.address], [bAsset1Amount], [musdRewardsAmount], [uniswapNewPaths.encoded])
+                        .buyBackRewards([zUSD.address], [bAsset1Amount], [zusdRewardsAmount], [uniswapNewPaths.encoded])
                     await expect(tx).to.revertedWith("Invalid uniswap path")
                 })
                 it("is too short", async () => {
                     const uniswapNewPaths = encodeUniswapPath([bAsset1.address, rewardsToken.address], [3000])
                     const tx = revenueBuyBack
                         .connect(sa.keeper.signer)
-                        .buyBackRewards([mUSD.address], [bAsset1Amount], [musdRewardsAmount], [uniswapNewPaths.encoded.slice(0, 42)])
+                        .buyBackRewards([zUSD.address], [bAsset1Amount], [zusdRewardsAmount], [uniswapNewPaths.encoded.slice(0, 42)])
                     await expect(tx).to.revertedWith("Uniswap path too short")
                 })
             })
@@ -507,24 +507,24 @@ describe("RevenueSplitBuyBack", () => {
         })
     })
     describe("mapBasset", () => {
-        let newMasset: MockMasset
+        let newZasset: MockZasset
         let newBasset: MockERC20
         before(async () => {
-            newMasset = await new MockMasset__factory(sa.default.signer).deploy(
+            newZasset = await new MockZasset__factory(sa.default.signer).deploy(
                 "EURO",
                 "mEUR",
                 18,
                 sa.default.address,
                 simpleToExactAmount(2000000),
             )
-            newBasset = await mAssetMachine.loadBassetProxy("EUR bAsset", "bEUR", 18)
+            newBasset = await zAssetMachine.loadBassetProxy("EUR bAsset", "bEUR", 18)
         })
         it("should map bAsset", async () => {
-            const tx = await revenueBuyBack.connect(sa.governor.signer).mapBasset(newMasset.address, newBasset.address)
+            const tx = await revenueBuyBack.connect(sa.governor.signer).mapBasset(newZasset.address, newBasset.address)
 
-            await expect(tx).to.emit(revenueBuyBack, "MappedBasset").withArgs(newMasset.address, newBasset.address)
+            await expect(tx).to.emit(revenueBuyBack, "MappedBasset").withArgs(newZasset.address, newBasset.address)
 
-            const bAsset = await revenueBuyBack.bassets(newMasset.address)
+            const bAsset = await revenueBuyBack.bassets(newZasset.address)
             expect(bAsset, "bAsset").to.eq(newBasset.address)
         })
         context("should fail when", () => {
@@ -532,16 +532,16 @@ describe("RevenueSplitBuyBack", () => {
                 await setupRevenueBuyBack(treasuryFee)
             })
             it("not governor", async () => {
-                const tx = revenueBuyBack.mapBasset(newMasset.address, newBasset.address)
+                const tx = revenueBuyBack.mapBasset(newZasset.address, newBasset.address)
 
                 await expect(tx).to.revertedWith("Only governor can execute")
             })
-            it("mAsset is zero", async () => {
+            it("zAsset is zero", async () => {
                 const tx = revenueBuyBack.connect(sa.governor.signer).mapBasset(ZERO_ADDRESS, newBasset.address)
-                await expect(tx).to.revertedWith("mAsset token is zero")
+                await expect(tx).to.revertedWith("zAsset token is zero")
             })
             it("bAsset is zero", async () => {
-                const tx = revenueBuyBack.connect(sa.governor.signer).mapBasset(newMasset.address, ZERO_ADDRESS)
+                const tx = revenueBuyBack.connect(sa.governor.signer).mapBasset(newZasset.address, ZERO_ADDRESS)
                 await expect(tx).to.revertedWith("bAsset token is zero")
             })
         })

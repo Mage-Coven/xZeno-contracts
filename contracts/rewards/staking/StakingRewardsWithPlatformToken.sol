@@ -18,7 +18,7 @@ import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable
 
 /**
  * @title  StakingRewardsWithPlatformToken
- * @author mStable
+ * @author xZeno
  * @notice Rewards stakers of a given LP token (a.k.a StakingToken) with RewardsToken, on a pro-rata basis
  * additionally, distributes the Platform token airdropped by the platform
  * @dev    Derives from ./StakingRewards.sol and implements a secondary token into the core logic
@@ -69,8 +69,8 @@ contract StakingRewardsWithPlatformToken is
     event RewardPaid(address indexed user, uint256 reward, uint256 platformReward);
 
     /**
-     * @param _nexus mStable system Nexus address
-     * @param _stakingToken token that is beinf rewarded for being staked. eg MTA, imUSD or fPmUSD/GUSD
+     * @param _nexus xZeno system Nexus address
+     * @param _stakingToken token that is beinf rewarded for being staked. eg MTA, izUSD or fPzUSD/GUSD
      * @param _rewardsToken first token that is being distributed as a reward. eg MTA
      * @param _platformToken second token that is being distributed as a reward. eg wMATIC on Polygon
      * @param _duration length of each staking period in seconds. 7 days = 604,800; 3 months = 7,862,400
@@ -91,9 +91,9 @@ contract StakingRewardsWithPlatformToken is
      * @dev Initialization function for upgradable proxy contract.
      *      This function should be called via Proxy just after contract deployment.
      *      To avoid variable shadowing appended `Arg` after arguments name.
-     * @param _rewardsDistributorArg mStable Reward Distributor contract address
-     * @param _nameArg token name. eg imUSD Vault or GUSD Feeder Pool Vault
-     * @param _symbolArg token symbol. eg v-imUSD or v-fPmUSD/GUSD
+     * @param _rewardsDistributorArg xZeno Reward Distributor contract address
+     * @param _nameArg token name. eg izUSD Vault or GUSD Feeder Pool Vault
+     * @param _symbolArg token symbol. eg v-izUSD or v-fPzUSD/GUSD
      */
     function initialize(
         address _rewardsDistributorArg,
@@ -190,17 +190,17 @@ contract StakingRewardsWithPlatformToken is
     /**
      * @notice Redeems staked interest-bearing asset tokens for either bAsset or fAsset tokens.
      * Withdraws a given staked amount of interest-bearing assets from the vault,
-     * redeems the interest-bearing asset for the underlying mAsset and either
-     * 1. Redeems the underlying mAsset tokens for bAsset tokens.
-     * 2. Swaps the underlying mAsset tokens for fAsset tokens in a Feeder Pool.
-     * @param _amount        Units of the staked interest-bearing asset tokens to withdraw. eg imUSD or imBTC.
+     * redeems the interest-bearing asset for the underlying zAsset and either
+     * 1. Redeems the underlying zAsset tokens for bAsset tokens.
+     * 2. Swaps the underlying zAsset tokens for fAsset tokens in a Feeder Pool.
+     * @param _amount        Units of the staked interest-bearing asset tokens to withdraw. eg izUSD or izBTC.
      * @param _minAmountOut  Minimum units of `output` tokens to be received by the beneficiary. This is to the same decimal places as the `output` token.
-     * @param _output        Asset to receive in exchange for the redeemed mAssets. This can be a bAsset or a fAsset. For example:
-        - bAssets (USDC, DAI, sUSD or USDT) or fAssets (GUSD, BUSD, alUSD, FEI or RAI) for mainnet imUSD Vault.
-        - bAssets (USDC, DAI or USDT) or fAsset FRAX for Polygon imUSD Vault.
-        - bAssets (WBTC, sBTC or renBTC) or fAssets (HBTC or TBTCV2) for mainnet imBTC Vault.
+     * @param _output        Asset to receive in exchange for the redeemed zAssets. This can be a bAsset or a fAsset. For example:
+        - bAssets (USDC, DAI, sUSD or USDT) or fAssets (GUSD, BUSD, alUSD, FEI or RAI) for mainnet izUSD Vault.
+        - bAssets (USDC, DAI or USDT) or fAsset FRAX for Polygon izUSD Vault.
+        - bAssets (WBTC, sBTC or renBTC) or fAssets (HBTC or TBTCV2) for mainnet izBTC Vault.
      * @param _beneficiary   Address to send `output` tokens to.
-     * @param _router        mAsset address if the `output` is a bAsset. Feeder Pool address if the `output` is a fAsset.
+     * @param _router        zAsset address if the `output` is a bAsset. Feeder Pool address if the `output` is a fAsset.
      * @param _isBassetOut   `true` if `output` is a bAsset. `false` if `output` is a fAsset.
      * @return outputQuantity Units of `output` tokens sent to the beneficiary. This is to the same decimal places as the `output` token.
      */

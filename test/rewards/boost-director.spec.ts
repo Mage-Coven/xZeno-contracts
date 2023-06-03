@@ -2,7 +2,7 @@
 
 import { ethers } from "hardhat"
 import { expect } from "chai"
-import { StandardAccounts, MassetMachine } from "@utils/machines"
+import { StandardAccounts, ZassetMachine } from "@utils/machines"
 import { DEAD_ADDRESS } from "@utils/constants"
 import {
     MockStakingContract,
@@ -35,8 +35,8 @@ describe("BoostDirectorV2", async () => {
 
     before(async () => {
         const accounts = await ethers.getSigners()
-        const mAssetMachine = await new MassetMachine().initAccounts(accounts)
-        sa = mAssetMachine.sa
+        const zAssetMachine = await new ZassetMachine().initAccounts(accounts)
+        sa = zAssetMachine.sa
 
         boostDirector = await redeploy()
     })

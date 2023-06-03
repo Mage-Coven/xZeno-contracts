@@ -13,15 +13,15 @@ const defaultConfig = {
     },
 }
 
-task("deployMV3", "Deploys the mUSD V3 implementation").setAction(async (_, hre) => {
+task("deployMV3", "Deploys the zUSD V3 implementation").setAction(async (_, hre) => {
     const { ethers, network } = hre
 
     const nexus = network.name === "mainnet" ? "0xafce80b19a8ce13dec0739a1aab7a028d6845eb3" : DEAD_ADDRESS
 
-    const Logic = await ethers.getContractFactory("MassetLogic")
+    const Logic = await ethers.getContractFactory("ZassetLogic")
     const logicLib = await Logic.deploy()
     await logicLib.deployTransaction.wait()
-    const Manager = await ethers.getContractFactory("MassetManager")
+    const Manager = await ethers.getContractFactory("ZassetManager")
     const managerLib = await Manager.deploy()
     await managerLib.deployTransaction.wait()
     const Migrator = await ethers.getContractFactory("Migrator")
@@ -30,18 +30,18 @@ task("deployMV3", "Deploys the mUSD V3 implementation").setAction(async (_, hre)
 
     const linkedAddress = {
         libraries: {
-            MassetLogic: logicLib.address,
-            MassetManager: managerLib.address,
+            ZassetLogic: logicLib.address,
+            ZassetManager: managerLib.address,
         },
     }
-    const massetFactory = await ethers.getContractFactory("MV3", linkedAddress)
-    const size = massetFactory.bytecode.length / 2 / 1000
+    const zassetFactory = await ethers.getContractFactory("MV3", linkedAddress)
+    const size = zassetFactory.bytecode.length / 2 / 1000
     if (size > 24.576) {
-        console.error(`Masset size is ${size} kb: ${size - 24.576} kb too big`)
+        console.error(`Zasset size is ${size} kb: ${size - 24.576} kb too big`)
     } else {
-        console.log(`Masset = ${size} kb`)
+        console.log(`Zasset = ${size} kb`)
     }
-    const impl = await massetFactory.deploy(nexus)
+    const impl = await zassetFactory.deploy(nexus)
     const receiptImpl = await impl.deployTransaction.wait()
     console.log(`Deployed to ${impl.address}. gas used ${receiptImpl.gasUsed}`)
 

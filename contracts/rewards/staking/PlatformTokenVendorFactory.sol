@@ -6,7 +6,7 @@ import { PlatformTokenVendor } from "./PlatformTokenVendor.sol";
 
 /**
  * @title  PlatformTokenVendorFactory
- * @author mStable
+ * @author xZeno
  * @notice Library that deploys a PlatformTokenVendor contract which holds rewards tokens
  * @dev    Used to reduce the byte size of the contracts that need to deploy a PlatformTokenVendor contract
  */

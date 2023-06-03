@@ -44,7 +44,7 @@ export class StandardAccounts {
 
     public mockRecollateraliser: Account
 
-    public mockMasset: Account
+    public mockZasset: Account
 
     public mockRewardsDistributor: Account
 
@@ -75,7 +75,7 @@ export class StandardAccounts {
             this.mockSavingsManager,
             this.mockInterestValidator,
             this.mockRecollateraliser,
-            this.mockMasset,
+            this.mockZasset,
             this.mockRewardsDistributor,
             this.keeper,
         ] = this.all

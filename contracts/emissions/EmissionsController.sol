@@ -68,7 +68,7 @@ struct EpochHistory {
 
 /**
  * @title  EmissionsController
- * @author mStable
+ * @author xZeno
  * @notice Allows governors to vote on the weekly distribution of $MTA. Rewards are distributed between
  *         `n` "Dials" proportionately to the % of votes the dial receives. Vote weight derives from multiple
  *         whitelisted "Staking contracts". Voters can distribute their vote across (0 <= n <= 16 dials), at 0.5%
@@ -135,7 +135,7 @@ contract EmissionsController is IGovernanceHook, Initializable, ImmutableModule 
     ****************************************/
 
     /**
-     * @notice Recipient is a module, governed by mStable governance.
+     * @notice Recipient is a module, governed by xZeno governance.
      * @param _nexus        System Nexus that resolves module addresses.
      * @param _rewardToken  Token that rewards are distributed in. eg MTA.
      * @param _config       Arguments for polynomial top level emission function (raw, not scaled).

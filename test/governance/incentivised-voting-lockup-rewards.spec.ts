@@ -3,7 +3,7 @@ import { expect } from "chai"
 import { ContractTransaction, Event, ContractReceipt } from "ethers"
 import { Account } from "types"
 import { getTimestamp, increaseTime, increaseTimeTo } from "@utils/time"
-import { MassetMachine, StandardAccounts } from "@utils/machines"
+import { ZassetMachine, StandardAccounts } from "@utils/machines"
 import { assertBNClose, assertBNSlightlyGT, assertBNClosePercent } from "@utils/assertions"
 import { BN, simpleToExactAmount, sqrt } from "@utils/math"
 import { ONE_WEEK, ONE_DAY, FIVE_DAYS, fullScale, DEFAULT_DECIMALS } from "@utils/constants"
@@ -63,7 +63,7 @@ const expectWithdrawEvent = async (
 describe("IncentivisedVotingLockupRewards", () => {
     const ctx: Partial<IRewardsDistributionRecipientContext> = {}
 
-    let mAssetMachine: MassetMachine
+    let zAssetMachine: ZassetMachine
     let nexus: Nexus
     let rewardsDistributor: Account
     let stakingToken: MockERC20
@@ -72,8 +72,8 @@ describe("IncentivisedVotingLockupRewards", () => {
 
     before("Init contract", async () => {
         const accounts = await ethers.getSigners()
-        mAssetMachine = await new MassetMachine().initAccounts(accounts)
-        sa = mAssetMachine.sa
+        zAssetMachine = await new ZassetMachine().initAccounts(accounts)
+        sa = zAssetMachine.sa
         nexus = await new Nexus__factory(sa.default.signer).deploy(sa.governor.address)
         rewardsDistributor = sa.fundManager
     })

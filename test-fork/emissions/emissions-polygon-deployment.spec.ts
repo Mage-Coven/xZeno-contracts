@@ -3,7 +3,7 @@ import { ethers, network } from "hardhat"
 import { impersonate } from "@utils/fork"
 import { Signer } from "ethers"
 import { resolveAddress } from "tasks/utils/networkAddressFactory"
-import { Chain, MTA, PBAL, PFRAX, PMTA, PmUSD } from "tasks/utils/tokens"
+import { Chain, MTA, PBAL, PFRAX, PMTA, PzUSD } from "tasks/utils/tokens"
 import {
     BalRewardsForwarder,
     BalRewardsForwarder__factory,
@@ -37,7 +37,7 @@ context("Fork test Emissions Controller on polygon", () => {
     let emissionsController: L2EmissionsController
     let mta: IERC20
     let childChainManager: IStateReceiver
-    let musdVault: InitializableRewardsDistributionRecipient
+    let zusdVault: InitializableRewardsDistributionRecipient
     let balRewardsForwarder: BalRewardsForwarder
     let nexusAddress: string
 
@@ -60,7 +60,7 @@ context("Fork test Emissions Controller on polygon", () => {
 
         emissionsController = L2EmissionsController__factory.connect(resolveAddress("EmissionsController", chain), ops)
         mta = IERC20__factory.connect(PMTA.address, ops)
-        musdVault = InitializableRewardsDistributionRecipient__factory.connect(PmUSD.vault, governor)
+        zusdVault = InitializableRewardsDistributionRecipient__factory.connect(PzUSD.vault, governor)
 
         childChainManager = IStateReceiver__factory.connect(resolveAddress("PolygonChildChainManager", chain), stateSyncer)
     }
@@ -77,25 +77,25 @@ context("Fork test Emissions Controller on polygon", () => {
         await setup()
     })
 
-    describe("mUSD Vault", () => {
+    describe("zUSD Vault", () => {
         const depositAmount = simpleToExactAmount(20000)
         before(async () => {
-            await musdVault.setRewardsDistribution(emissionsController.address)
+            await zusdVault.setRewardsDistribution(emissionsController.address)
         })
-        it("Deposit 20k to mUSD bridge recipient", async () => {
-            expect(await mta.balanceOf(PmUSD.bridgeRecipient), "bridge recipient bal before").to.eq(0)
+        it("Deposit 20k to zUSD bridge recipient", async () => {
+            expect(await mta.balanceOf(PzUSD.bridgeRecipient), "bridge recipient bal before").to.eq(0)
 
-            await deposit(PmUSD.bridgeRecipient, depositAmount)
+            await deposit(PzUSD.bridgeRecipient, depositAmount)
 
-            expect(await mta.balanceOf(PmUSD.bridgeRecipient), "bridge recipient bal after").to.eq(depositAmount)
+            expect(await mta.balanceOf(PzUSD.bridgeRecipient), "bridge recipient bal after").to.eq(depositAmount)
         })
         it("Distribute rewards", async () => {
-            const mtaBalBefore = await mta.balanceOf(PmUSD.vault)
+            const mtaBalBefore = await mta.balanceOf(PzUSD.vault)
             expect(mtaBalBefore, "vault bal before").to.gt(0)
 
-            await emissionsController.distributeRewards([PmUSD.vault])
+            await emissionsController.distributeRewards([PzUSD.vault])
 
-            const mtaBalAfter = await mta.balanceOf(PmUSD.vault)
+            const mtaBalAfter = await mta.balanceOf(PzUSD.vault)
             expect(mtaBalAfter.sub(mtaBalBefore), "vault bal change").to.eq(depositAmount)
         })
     })

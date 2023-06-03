@@ -57,7 +57,7 @@ contract StakedTokenBPT is StakedToken {
      * @param _nexus System nexus
      * @param _rewardsToken Token that is being distributed as a reward. eg Meta (MTA)
      * @param _questManager Centralised manager of quests
-     * @param _stakedToken Core token that is staked and tracked e.g. mStable MTA/WETH Staking BPT (mBPT)
+     * @param _stakedToken Core token that is staked and tracked e.g. xZeno MTA/WETH Staking BPT (mBPT)
      * @param _cooldownSeconds Seconds a user must wait after she initiates her cooldown before withdrawal is possible
      * @param _bal Balancer addresses, [0] = $BAL addr, [1] = BAL vault
      * @param _poolId Balancer Pool identifier
@@ -91,7 +91,7 @@ contract StakedTokenBPT is StakedToken {
     /**
      * @param _nameArg Token name
      * @param _symbolArg Token symbol
-     * @param _rewardsDistributorArg mStable Rewards Distributor
+     * @param _rewardsDistributorArg xZeno Rewards Distributor
      * @param _priceCoefficient Initial pricing coefficient
      */
     function initialize(

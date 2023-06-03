@@ -2,13 +2,13 @@ import { ethers } from "hardhat"
 import { expect } from "chai"
 
 import { simpleToExactAmount } from "@utils/math"
-import { MassetMachine, StandardAccounts } from "@utils/machines"
+import { ZassetMachine, StandardAccounts } from "@utils/machines"
 
 import {
     MockNexus__factory,
     MockNexus,
-    MockMasset__factory,
-    MockMasset,
+    MockZasset__factory,
+    MockZasset,
     RevenueForwarder__factory,
     RevenueForwarder,
 } from "types/generated"
@@ -17,20 +17,20 @@ import { Wallet } from "@ethersproject/wallet"
 
 describe("RevenueForwarder", () => {
     let sa: StandardAccounts
-    let mAssetMachine: MassetMachine
+    let zAssetMachine: ZassetMachine
     let nexus: MockNexus
     let revenueForwarder: RevenueForwarder
-    let mAsset: MockMasset
+    let zAsset: MockZasset
     let forwarderAddress: string
 
     /*
         Test Data
-        mAssets: mUSD and mBTC with 18 decimals
+        zAssets: zUSD and zBTC with 18 decimals
      */
     const setup = async (): Promise<void> => {
-        mAsset = await new MockMasset__factory(sa.default.signer).deploy(
+        zAsset = await new MockZasset__factory(sa.default.signer).deploy(
             "meta USD",
-            "mUSD",
+            "zUSD",
             18,
             sa.default.address,
             simpleToExactAmount(1000000),
@@ -46,13 +46,13 @@ describe("RevenueForwarder", () => {
         forwarderAddress = Wallet.createRandom().address
 
         // Deploy aRevenueForwarder
-        revenueForwarder = await new RevenueForwarder__factory(sa.default.signer).deploy(nexus.address, mAsset.address, forwarderAddress)
+        revenueForwarder = await new RevenueForwarder__factory(sa.default.signer).deploy(nexus.address, zAsset.address, forwarderAddress)
     }
 
     before(async () => {
         const accounts = await ethers.getSigners()
-        mAssetMachine = await new MassetMachine().initAccounts(accounts)
-        sa = mAssetMachine.sa
+        zAssetMachine = await new ZassetMachine().initAccounts(accounts)
+        sa = zAssetMachine.sa
 
         await setup()
     })
@@ -60,59 +60,59 @@ describe("RevenueForwarder", () => {
     describe("creating new instance", () => {
         it("should have immutable variables set", async () => {
             expect(await revenueForwarder.nexus(), "Nexus").eq(nexus.address)
-            expect(await revenueForwarder.mAsset(), "mAsset").eq(mAsset.address)
+            expect(await revenueForwarder.zAsset(), "zAsset").eq(zAsset.address)
             expect(await revenueForwarder.forwarder(), "Forwarder").eq(forwarderAddress)
         })
         describe("it should fail if zero", () => {
             it("nexus", async () => {
-                const tx = new RevenueForwarder__factory(sa.default.signer).deploy(ZERO_ADDRESS, mAsset.address, forwarderAddress)
+                const tx = new RevenueForwarder__factory(sa.default.signer).deploy(ZERO_ADDRESS, zAsset.address, forwarderAddress)
                 await expect(tx).to.revertedWith("Nexus address is zero")
             })
-            it("mAsset", async () => {
+            it("zAsset", async () => {
                 const tx = new RevenueForwarder__factory(sa.default.signer).deploy(nexus.address, ZERO_ADDRESS, forwarderAddress)
-                await expect(tx).to.revertedWith("mAsset is zero")
+                await expect(tx).to.revertedWith("zAsset is zero")
             })
             it("Forwarder", async () => {
-                const tx = new RevenueForwarder__factory(sa.default.signer).deploy(nexus.address, mAsset.address, ZERO_ADDRESS)
+                const tx = new RevenueForwarder__factory(sa.default.signer).deploy(nexus.address, zAsset.address, ZERO_ADDRESS)
                 await expect(tx).to.revertedWith("Forwarder is zero")
             })
         })
     })
     describe("notification of revenue", () => {
         it("should simply transfer from the sender", async () => {
-            const senderBalBefore = await mAsset.balanceOf(sa.default.address)
-            const revenueBuyBackBalBefore = await mAsset.balanceOf(revenueForwarder.address)
+            const senderBalBefore = await zAsset.balanceOf(sa.default.address)
+            const revenueBuyBackBalBefore = await zAsset.balanceOf(revenueForwarder.address)
             const notificationAmount = simpleToExactAmount(100, 18)
             expect(senderBalBefore.gte(notificationAmount), "sender rewards bal before").to.eq(true)
 
             // approve
-            await mAsset.approve(revenueForwarder.address, notificationAmount)
+            await zAsset.approve(revenueForwarder.address, notificationAmount)
             // call
-            const tx = await revenueForwarder.notifyRedistributionAmount(mAsset.address, notificationAmount)
-            await expect(tx).to.emit(revenueForwarder, "RevenueReceived").withArgs(mAsset.address, notificationAmount)
+            const tx = await revenueForwarder.notifyRedistributionAmount(zAsset.address, notificationAmount)
+            await expect(tx).to.emit(revenueForwarder, "RevenueReceived").withArgs(zAsset.address, notificationAmount)
 
-            // check output balances: mAsset sender/recipient
-            expect(await mAsset.balanceOf(sa.default.address), "mAsset sender bal after").eq(senderBalBefore.sub(notificationAmount))
-            expect(await mAsset.balanceOf(revenueForwarder.address), "mAsset RevenueForwarder bal after").eq(
+            // check output balances: zAsset sender/recipient
+            expect(await zAsset.balanceOf(sa.default.address), "zAsset sender bal after").eq(senderBalBefore.sub(notificationAmount))
+            expect(await zAsset.balanceOf(revenueForwarder.address), "zAsset RevenueForwarder bal after").eq(
                 revenueBuyBackBalBefore.add(notificationAmount),
             )
         })
         describe("it should fail if", () => {
-            it("not configured mAsset", async () => {
+            it("not configured zAsset", async () => {
                 await expect(revenueForwarder.notifyRedistributionAmount(sa.dummy1.address, simpleToExactAmount(1, 18))).to.be.revertedWith(
-                    "Recipient is not mAsset",
+                    "Recipient is not zAsset",
                 )
             })
             it("approval is not given from sender", async () => {
-                await expect(revenueForwarder.notifyRedistributionAmount(mAsset.address, simpleToExactAmount(100, 18))).to.be.revertedWith(
+                await expect(revenueForwarder.notifyRedistributionAmount(zAsset.address, simpleToExactAmount(100, 18))).to.be.revertedWith(
                     "ERC20: transfer amount exceeds allowance",
                 )
             })
             it("sender has insufficient balance", async () => {
-                await mAsset.transfer(sa.dummy1.address, simpleToExactAmount(1, 18))
-                await mAsset.connect(sa.dummy1.signer).approve(revenueForwarder.address, simpleToExactAmount(100))
+                await zAsset.transfer(sa.dummy1.address, simpleToExactAmount(1, 18))
+                await zAsset.connect(sa.dummy1.signer).approve(revenueForwarder.address, simpleToExactAmount(100))
                 await expect(
-                    revenueForwarder.connect(sa.dummy1.signer).notifyRedistributionAmount(mAsset.address, simpleToExactAmount(2, 18)),
+                    revenueForwarder.connect(sa.dummy1.signer).notifyRedistributionAmount(zAsset.address, simpleToExactAmount(2, 18)),
                 ).to.be.revertedWith("ERC20: transfer amount exceeds balance")
             })
         })
@@ -122,40 +122,40 @@ describe("RevenueForwarder", () => {
         beforeEach(async () => {
             await setup()
             // approve
-            await mAsset.approve(revenueForwarder.address, notificationAmount)
+            await zAsset.approve(revenueForwarder.address, notificationAmount)
             // call
-            await revenueForwarder.notifyRedistributionAmount(mAsset.address, notificationAmount)
+            await revenueForwarder.notifyRedistributionAmount(zAsset.address, notificationAmount)
         })
-        it("keeper should forward received mAssets", async () => {
-            expect(await mAsset.balanceOf(revenueForwarder.address), "revenue forwarder's mAsset bal before").to.eq(notificationAmount)
-            expect(await mAsset.balanceOf(forwarderAddress), "forwarder's mAsset bal before").to.eq(0)
+        it("keeper should forward received zAssets", async () => {
+            expect(await zAsset.balanceOf(revenueForwarder.address), "revenue forwarder's zAsset bal before").to.eq(notificationAmount)
+            expect(await zAsset.balanceOf(forwarderAddress), "forwarder's zAsset bal before").to.eq(0)
 
             const tx = await revenueForwarder.connect(sa.keeper.signer).forward()
 
             await expect(tx).to.emit(revenueForwarder, "Withdrawn").withArgs(notificationAmount)
-            expect(await mAsset.balanceOf(revenueForwarder.address), "revenue forwarder's mAsset bal after").to.eq(0)
-            expect(await mAsset.balanceOf(forwarderAddress), "forwarder's mAsset bal after").to.eq(notificationAmount)
+            expect(await zAsset.balanceOf(revenueForwarder.address), "revenue forwarder's zAsset bal after").to.eq(0)
+            expect(await zAsset.balanceOf(forwarderAddress), "forwarder's zAsset bal after").to.eq(notificationAmount)
         })
-        it("governor should forward received mAssets", async () => {
-            expect(await mAsset.balanceOf(revenueForwarder.address), "revenue forwarder's mAsset bal before").to.eq(notificationAmount)
-            expect(await mAsset.balanceOf(forwarderAddress), "forwarder's mAsset bal before").to.eq(0)
+        it("governor should forward received zAssets", async () => {
+            expect(await zAsset.balanceOf(revenueForwarder.address), "revenue forwarder's zAsset bal before").to.eq(notificationAmount)
+            expect(await zAsset.balanceOf(forwarderAddress), "forwarder's zAsset bal before").to.eq(0)
 
             const tx = await revenueForwarder.connect(sa.governor.signer).forward()
 
             await expect(tx).to.emit(revenueForwarder, "Withdrawn").withArgs(notificationAmount)
-            expect(await mAsset.balanceOf(revenueForwarder.address), "revenue forwarder's mAsset bal after").to.eq(0)
-            expect(await mAsset.balanceOf(forwarderAddress), "forwarder's mAsset bal after").to.eq(notificationAmount)
+            expect(await zAsset.balanceOf(revenueForwarder.address), "revenue forwarder's zAsset bal after").to.eq(0)
+            expect(await zAsset.balanceOf(forwarderAddress), "forwarder's zAsset bal after").to.eq(notificationAmount)
         })
         it("should forward with no rewards balance", async () => {
             // Forward whatever balance it currently has
             await revenueForwarder.connect(sa.keeper.signer).forward()
 
-            expect(await mAsset.balanceOf(revenueForwarder.address), "revenue forwarder's mAsset bal before").to.eq(0)
+            expect(await zAsset.balanceOf(revenueForwarder.address), "revenue forwarder's zAsset bal before").to.eq(0)
 
             const tx = await revenueForwarder.connect(sa.keeper.signer).forward()
 
             await expect(tx).to.not.emit(revenueForwarder, "Withdrawn")
-            expect(await mAsset.balanceOf(revenueForwarder.address), "revenue forwarder's mAsset bal after").to.eq(0)
+            expect(await zAsset.balanceOf(revenueForwarder.address), "revenue forwarder's zAsset bal after").to.eq(0)
         })
         it("Not governor or keeper fail set new forwarder", async () => {
             const tx = revenueForwarder.connect(sa.dummy1.signer).forward()

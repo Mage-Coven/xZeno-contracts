@@ -1,5 +1,5 @@
-import mAssetData from "./masset"
+import zAssetData from "./zasset"
 import feederData from "./feeder"
 import crossData from "./cross"
 
-export { mAssetData, feederData, crossData }
+export { zAssetData, feederData, crossData }

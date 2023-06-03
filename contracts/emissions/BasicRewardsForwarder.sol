@@ -9,7 +9,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title  BasicRewardsForwarder
- * @author mStable
+ * @author xZeno
  * @notice Transfers any received reward tokens to another contract or account.
  * @dev    VERSION: 1.0
  *         DATE:    2021-10-28
@@ -31,7 +31,7 @@ contract BasicRewardsForwarder is
     event RecipientChanged(address indexed newRecipient);
 
     /**
-     * @param _nexus        mStable system Nexus address
+     * @param _nexus        xZeno system Nexus address
      * @param _rewardsToken Token that is being distributed as a reward. eg MTA
      */
     constructor(address _nexus, address _rewardsToken)
@@ -43,7 +43,7 @@ contract BasicRewardsForwarder is
 
     /**
      * @dev Init fn
-     * @param _emissionsController mStable Emissions Controller that distributes MTA rewards
+     * @param _emissionsController xZeno Emissions Controller that distributes MTA rewards
      * @param _endRecipient        Account that ultimately receives the reward tokens
      */
     function initialize(address _emissionsController, address _endRecipient) external initializer {
@@ -74,7 +74,7 @@ contract BasicRewardsForwarder is
     ****************************************/
 
     /**
-     * @notice Change the endRecipient. Can only be called by mStable governor.
+     * @notice Change the endRecipient. Can only be called by xZeno governor.
      * @param _endRecipient The account the reward tokens are sent to
      */
     function setEndRecipient(address _endRecipient) external onlyOwner {

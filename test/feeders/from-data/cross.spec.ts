@@ -6,14 +6,14 @@ import { MAX_UINT256, ZERO_ADDRESS } from "@utils/constants"
 import {
     ExposedFeederPool,
     ExposedFeederPool__factory,
-    ExposedMasset,
+    ExposedZasset,
     FeederLogic__factory,
     MockERC20,
     FeederManager__factory,
-    Masset,
+    Zasset,
 } from "types/generated"
 import { assertBNClose } from "@utils/assertions"
-import { MassetMachine, StandardAccounts } from "@utils/machines"
+import { ZassetMachine, StandardAccounts } from "@utils/machines"
 import { crossData } from "@utils/validator-data"
 
 const { integrationData } = crossData
@@ -27,10 +27,10 @@ const config = {
         max: simpleToExactAmount(80, 16),
     },
 }
-const massetA = 120
+const zassetA = 120
 const maxAction = 100
 const feederFees = { swap: simpleToExactAmount(8, 14), redeem: simpleToExactAmount(6, 14), gov: simpleToExactAmount(1, 17) }
-const mAssetFees = { swap: simpleToExactAmount(6, 14), redeem: simpleToExactAmount(3, 14) }
+const zAssetFees = { swap: simpleToExactAmount(6, 14), redeem: simpleToExactAmount(3, 14) }
 
 const ratio = simpleToExactAmount(1, 8)
 const tolerance = BN.from(20)
@@ -45,7 +45,7 @@ const getMPReserves = (data: any) =>
         }))
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getFPReserves = (data: any) =>
-    [data.feederPoolMAssetReserve, data.feederPoolFAssetReserve].map((r) => ({
+    [data.feederPoolZAssetReserve, data.feederPoolFAssetReserve].map((r) => ({
         ratio,
         vaultBalance: cv(r),
     }))
@@ -61,26 +61,26 @@ interface Data {
             k: BN
         }
     }
-    mAsset: {
+    zAsset: {
         totalSupply: BN
         vaultBalances: BN[]
     }
 }
-const getData = async (_feederPool: ExposedFeederPool, _mAsset: Masset | ExposedMasset): Promise<Data> => ({
+const getData = async (_feederPool: ExposedFeederPool, _zAsset: Zasset | ExposedZasset): Promise<Data> => ({
     fp: {
         totalSupply: (await _feederPool.totalSupply()).add((await _feederPool.data()).pendingFees),
         vaultBalances: (await _feederPool.getBassets())[1].map((b) => b[1]),
         value: await _feederPool.getPrice(),
     },
-    mAsset: {
-        totalSupply: (await _mAsset.getConfig()).supply, // gets the total supply plus any surplus
-        vaultBalances: (await _mAsset.getBassets())[1].map((b) => b[1]),
+    zAsset: {
+        totalSupply: (await _zAsset.getConfig()).supply, // gets the total supply plus any surplus
+        vaultBalances: (await _zAsset.getBassets())[1].map((b) => b[1]),
     },
 })
 
 describe("Cross swap - One basket many tests", () => {
     let feederPool: ExposedFeederPool
-    let mAsset: Masset | ExposedMasset
+    let zAsset: Zasset | ExposedZasset
     let sa: StandardAccounts
     let recipient: string
     let fpAssetAddresses: string[]
@@ -88,19 +88,19 @@ describe("Cross swap - One basket many tests", () => {
 
     before(async () => {
         const accounts = await ethers.getSigners()
-        const mAssetMachine = await new MassetMachine().initAccounts(accounts)
-        sa = mAssetMachine.sa
+        const zAssetMachine = await new ZassetMachine().initAccounts(accounts)
+        sa = zAssetMachine.sa
         recipient = await sa.default.address
 
-        const mAssetDetails = await mAssetMachine.deployLite(massetA)
+        const zAssetDetails = await zAssetMachine.deployLite(zassetA)
 
-        await mAssetDetails.mAsset.connect(sa.governor.signer).setFees(mAssetFees.swap, mAssetFees.redeem)
+        await zAssetDetails.zAsset.connect(sa.governor.signer).setFees(zAssetFees.swap, zAssetFees.redeem)
 
-        const fAsset = await mAssetMachine.loadBassetProxy("Feeder Asset", "fAST", 18)
-        const bAssets = [mAssetDetails.mAsset as MockERC20, fAsset]
+        const fAsset = await zAssetMachine.loadBassetProxy("Feeder Asset", "fAST", 18)
+        const bAssets = [zAssetDetails.zAsset as MockERC20, fAsset]
         fpAssetAddresses = bAssets.map((b) => b.address)
-        mpAssetAddresses = mAssetDetails.bAssets.map((b) => b.address)
-        mAsset = mAssetDetails.mAsset
+        mpAssetAddresses = zAssetDetails.bAssets.map((b) => b.address)
+        zAsset = zAssetDetails.zAsset
 
         const feederLogic = await new FeederLogic__factory(sa.default.signer).deploy()
         const manager = await new FeederManager__factory(sa.default.signer).deploy()
@@ -113,15 +113,15 @@ describe("Cross swap - One basket many tests", () => {
             })
         ).connect(sa.default.signer) as ExposedFeederPool__factory
 
-        await mAssetMachine.seedWithWeightings(
-            mAssetDetails,
+        await zAssetMachine.seedWithWeightings(
+            zAssetDetails,
             getMPReserves(integrationData).map((r) => r.vaultBalance),
             true,
         )
 
-        feederPool = (await FeederFactory.deploy(mAssetDetails.nexus.address, bAssets[0].address)) as ExposedFeederPool
+        feederPool = (await FeederFactory.deploy(zAssetDetails.nexus.address, bAssets[0].address)) as ExposedFeederPool
         await feederPool.initialize(
-            "mStable mBTC/bBTC Feeder",
+            "xZeno zBTC/bBTC Feeder",
             "bBTC fPool",
             {
                 addr: bAssets[0].address,
@@ -140,7 +140,7 @@ describe("Cross swap - One basket many tests", () => {
         )
         await feederPool.connect(sa.governor.signer).setFees(feederFees.swap, feederFees.redeem, feederFees.gov)
         await Promise.all(bAssets.map((b) => b.approve(feederPool.address, MAX_UINT256)))
-        await Promise.all(mAssetDetails.bAssets.map((b) => b.approve(feederPool.address, MAX_UINT256)))
+        await Promise.all(zAssetDetails.bAssets.map((b) => b.approve(feederPool.address, MAX_UINT256)))
 
         const reserves = getFPReserves(integrationData)
 
@@ -159,7 +159,7 @@ describe("Cross swap - One basket many tests", () => {
         integrationData.actions.slice(0, runLongTests ? integrationData.actions.length : maxAction).forEach((testData) => {
             describe(`Action ${(count += 1)}`, () => {
                 before(async () => {
-                    dataBefore = await getData(feederPool, mAsset)
+                    dataBefore = await getData(feederPool, zAsset)
                 })
                 switch (testData.type) {
                     case "mint":
@@ -190,7 +190,7 @@ describe("Cross swap - One basket many tests", () => {
                                     recipient,
                                 )
 
-                                const dataMid = await getData(feederPool, mAsset)
+                                const dataMid = await getData(feederPool, zAsset)
                                 assertBNClose(dataMid.fp.totalSupply.sub(dataBefore.fp.totalSupply), expectedOutput, tolerance)
                             })
                         }
@@ -279,7 +279,7 @@ describe("Cross swap - One basket many tests", () => {
                         break
                     case "redeem":
                         if (testData.hardLimitError) {
-                            it(`throws Max Weight error when redeeming ${testData.inputQty} mAssets for mpAsset ${testData.outputIndex}`, async () => {
+                            it(`throws Max Weight error when redeeming ${testData.inputQty} zAssets for mpAsset ${testData.outputIndex}`, async () => {
                                 await expect(
                                     feederPool.redeem(mpAssetAddresses[testData.outputIndex], testData.inputQty, 0, recipient),
                                 ).to.be.revertedWith("Exceeds weight limits")
@@ -288,7 +288,7 @@ describe("Cross swap - One basket many tests", () => {
                                 ).to.be.revertedWith("Exceeds weight limits")
                             })
                         } else if (testData.insufficientLiquidityError) {
-                            it(`throws insufficient liquidity error when redeeming ${testData.inputQty} mAssets for bAsset ${testData.outputIndex}`, async () => {
+                            it(`throws insufficient liquidity error when redeeming ${testData.inputQty} zAssets for bAsset ${testData.outputIndex}`, async () => {
                                 await expect(
                                     feederPool.redeem(mpAssetAddresses[testData.outputIndex], testData.inputQty, 0, recipient),
                                 ).to.be.revertedWith("VM Exception")
@@ -297,7 +297,7 @@ describe("Cross swap - One basket many tests", () => {
                                 ).to.be.revertedWith("VM Exception")
                             })
                         } else {
-                            it(`redeem ${testData.inputQty} mAssets for bAsset ${testData.outputIndex}`, async () => {
+                            it(`redeem ${testData.inputQty} zAssets for bAsset ${testData.outputIndex}`, async () => {
                                 const expectedOutput = await feederPool.getRedeemOutput(
                                     mpAssetAddresses[testData.outputIndex],
                                     testData.inputQty,
@@ -318,13 +318,13 @@ describe("Cross swap - One basket many tests", () => {
                 }
 
                 it("holds invariant after action", async () => {
-                    const dataEnd = await getData(feederPool, mAsset)
+                    const dataEnd = await getData(feederPool, zAsset)
                     // 1. Check resulting reserves
                     if (testData.fpReserves) {
                         dataEnd.fp.vaultBalances.map((vb, i) => assertBNClose(vb, cv(testData.fpReserves[i]), BN.from(1000)))
                     }
                     if (testData.mpReserves) {
-                        dataEnd.mAsset.vaultBalances.map((vb, i) => assertBNClose(vb, cv(testData.mpReserves[i]), BN.from(1000)))
+                        dataEnd.zAsset.vaultBalances.map((vb, i) => assertBNClose(vb, cv(testData.mpReserves[i]), BN.from(1000)))
                     }
                     // 2. Price always goes up
                     expect(dataEnd.fp.value.price, "fpToken price should always go up").gte(dataBefore.fp.value.price)
@@ -332,8 +332,8 @@ describe("Cross swap - One basket many tests", () => {
                     if (testData.LPTokenSupply) {
                         assertBNClose(dataEnd.fp.totalSupply, cv(testData.LPTokenSupply), 100, "Total supply should check out")
                     }
-                    if (testData.mAssetSupply) {
-                        assertBNClose(dataEnd.mAsset.totalSupply, cv(testData.mAssetSupply), 100, "Total supply should check out")
+                    if (testData.zAssetSupply) {
+                        assertBNClose(dataEnd.zAsset.totalSupply, cv(testData.zAssetSupply), 100, "Total supply should check out")
                     }
                 })
             })

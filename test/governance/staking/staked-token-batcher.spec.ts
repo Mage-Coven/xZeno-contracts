@@ -1,5 +1,5 @@
 import { ethers } from "hardhat"
-import { MassetMachine, StandardAccounts } from "@utils/machines"
+import { ZassetMachine, StandardAccounts } from "@utils/machines"
 import { MockNexus__factory } from "types/generated/factories/MockNexus__factory"
 import {
     AssetProxy__factory,
@@ -68,8 +68,8 @@ describe("Staked Token Batcher", () => {
     }
     before("Create Contract", async () => {
         const accounts = await ethers.getSigners()
-        const mAssetMachine = await new MassetMachine().initAccounts(accounts)
-        sa = mAssetMachine.sa
+        const zAssetMachine = await new ZassetMachine().initAccounts(accounts)
+        sa = zAssetMachine.sa
         stakedTokenBatcher = await new StakedTokenBatcher__factory(sa.default.signer ).deploy()
         stakedToken = await deployStakedToken();
         // Distribute reward token to multiple users 

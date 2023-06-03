@@ -12,8 +12,8 @@ export const config = {
 export const startingCap = simpleToExactAmount(9, 18) // 9 (9 BTC = 405,000)
 export const capFactor = simpleToExactAmount(20, 18) // 20 (20 BTC = 900,000)
 
-export const mBtcName = "mStable BTC"
-export const mBtcSymbol = "mBTC"
+export const zBtcName = "xZeno BTC"
+export const zBtcSymbol = "zBTC"
 
 export interface Bassets {
     name: string
@@ -65,9 +65,9 @@ export const contracts = {
         sBTC: "0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6",
         WBTC: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
 
-        // mBTC contracts
-        mBTC: "0x945Facb997494CC2570096c74b5F66A3507330a1",
-        imBTC: "0x17d8CBB6Bce8cEE970a4027d1198F6700A7a6c24",
+        // zBTC contracts
+        zBTC: "0x945Facb997494CC2570096c74b5F66A3507330a1",
+        izBTC: "0x17d8CBB6Bce8cEE970a4027d1198F6700A7a6c24",
         Manager: "0x1E91F826fa8aA4fa4D3F595898AF3A64dd188848",
         InvariantValidator: "0xd36050B5F28126b5292B59128ED25E489a0f2F3f",
 
@@ -82,9 +82,9 @@ export const contracts = {
         sBTC: "0x4F85915Ef4409b953aAa70cC0169Cb48fC909C4d",
         WBTC: "0x6f19A562A32EC6d6404BeaA8C218C425cA73c451",
 
-        // mBTC contracts
-        mBTC: "0x4A677A48A790f26eac4c97f495E537558Abf6A79",
-        imBTC: "0xBfe31D984d688628d06Ae2Da1D640Cf5D9e242A5",
+        // zBTC contracts
+        zBTC: "0x4A677A48A790f26eac4c97f495E537558Abf6A79",
+        izBTC: "0xBfe31D984d688628d06Ae2Da1D640Cf5D9e242A5",
     },
 }
 

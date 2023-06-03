@@ -5,7 +5,7 @@ import { expect } from "chai"
 import { utils } from "ethers"
 import { simpleToExactAmount, BN } from "@utils/math"
 import { assertBNClose, assertBNClosePercent, assertBNSlightlyGT } from "@utils/assertions"
-import { StandardAccounts, MassetMachine } from "@utils/machines"
+import { StandardAccounts, ZassetMachine } from "@utils/machines"
 import { fullScale, ZERO_ADDRESS, ZERO, ONE_DAY, FIVE_DAYS, ONE_WEEK, DEAD_ADDRESS } from "@utils/constants"
 import { getTimestamp, increaseTime } from "@utils/time"
 import {
@@ -87,7 +87,7 @@ interface ConfigRedeemAndUnwrap {
     isBassetOut: boolean
     beneficiary: Account
     output: MockERC20 // Asset to unwrap from underlying
-    router: FeederPool | MockERC20 // Router address = mAsset || feederPool
+    router: FeederPool | MockERC20 // Router address = zAsset || feederPool
 }
 async function getUserReward(boostedDualVault: BoostedDualVault, beneficiary: Account, i: number) {
     const [start, finish, rate] = await boostedDualVault.userRewards(beneficiary.address, i)
@@ -97,12 +97,12 @@ describe("BoostedDualVault", async () => {
     const ctx: Partial<IRewardsDistributionRecipientContext> = {}
 
     let sa: StandardAccounts
-    let mAssetMachine: MassetMachine
+    let zAssetMachine: ZassetMachine
     let rewardsDistributor: Account
 
     let rewardToken: MockERC20
     let platformToken: MockERC20
-    let imAsset: MockERC20
+    let izAsset: MockERC20
     let nexus: MockNexus
     let boostedDualVault: BoostedDualVault
     let stakingContract: MockStakingContract
@@ -140,14 +140,14 @@ describe("BoostedDualVault", async () => {
         nexus = await new MockNexus__factory(sa.default.signer).deploy(sa.governor.address, DEAD_ADDRESS, DEAD_ADDRESS)
         rewardToken = await new MockERC20__factory(sa.default.signer).deploy("Reward", "RWD", 18, rewardsDistributor.address, 10000000)
         platformToken = await new MockERC20__factory(sa.default.signer).deploy("PLAT4M", "PLAT", 18, rewardsDistributor.address, 1000000)
-        const mAsset = await new MockERC20__factory(sa.default.signer).deploy("mUSD", "mUSD", 18, sa.default.address, 1000000)
-        imAsset = await new MockSavingsContract__factory(sa.default.signer).deploy(
-            "Interest bearing mUSD",
-            "imUSD",
+        const zAsset = await new MockERC20__factory(sa.default.signer).deploy("zUSD", "zUSD", 18, sa.default.address, 1000000)
+        izAsset = await new MockSavingsContract__factory(sa.default.signer).deploy(
+            "Interest bearing zUSD",
+            "izUSD",
             18,
             sa.default.address,
             1000000,
-            mAsset.address,
+            zAsset.address,
         )
         stakingContract = await new MockStakingContract__factory(sa.default.signer).deploy()
 
@@ -156,7 +156,7 @@ describe("BoostedDualVault", async () => {
         const vaultFactory = await new BoostedDualVault__factory(sa.default.signer)
         const vaultImpl = await vaultFactory.deploy(
             nexus.address,
-            imAsset.address,
+            izAsset.address,
             boostDirector.address,
             priceCoefficient,
             coeff,
@@ -186,8 +186,8 @@ describe("BoostedDualVault", async () => {
                 totalSupply: await boostedDualVault.totalSupply(),
             },
             tokenBalance: {
-                sender: await imAsset.balanceOf(sender.address),
-                contract: await imAsset.balanceOf(boostedDualVault.address),
+                sender: await izAsset.balanceOf(sender.address),
+                contract: await izAsset.balanceOf(boostedDualVault.address),
             },
             platform: {
                 tokenVendor,
@@ -219,8 +219,8 @@ describe("BoostedDualVault", async () => {
 
     before(async () => {
         const accounts = await ethers.getSigners()
-        mAssetMachine = await new MassetMachine().initAccounts(accounts)
-        sa = mAssetMachine.sa
+        zAssetMachine = await new ZassetMachine().initAccounts(accounts)
+        sa = zAssetMachine.sa
         rewardsDistributor = sa.fundManager
 
         boostedDualVault = await redeployRewards()
@@ -237,7 +237,7 @@ describe("BoostedDualVault", async () => {
         it("should set all initial state", async () => {
             // Set in constructor
             expect(await boostedDualVault.nexus()).to.eq(nexus.address)
-            expect(await boostedDualVault.stakingToken()).to.eq(imAsset.address)
+            expect(await boostedDualVault.stakingToken()).to.eq(izAsset.address)
             expect(await boostedDualVault.boostDirector()).to.eq(boostDirector.address)
             expect(await boostedDualVault.rewardsToken()).to.eq(rewardToken.address)
             expect(await boostedDualVault.rewardsDistributor()).to.eq(rewardsDistributor.address)
@@ -372,7 +372,7 @@ describe("BoostedDualVault", async () => {
             expect(isExistingStaker).eq(true)
         }
         // 2. Approve staking token spending and send the TX
-        await imAsset.connect(sender.signer).approve(boostedDualVault.address, stakeAmount)
+        await izAsset.connect(sender.signer).approve(boostedDualVault.address, stakeAmount)
         const tx = senderIsBeneficiary
             ? boostedDualVault.connect(sender.signer)["stake(uint256)"](stakeAmount)
             : boostedDualVault.connect(sender.signer)["stake(address,uint256)"](beneficiary.address, stakeAmount)
@@ -579,7 +579,7 @@ describe("BoostedDualVault", async () => {
             })
 
             it("should fail if staker has insufficient balance", async () => {
-                await imAsset.connect(sa.dummy2.signer).approve(boostedDualVault.address, 1)
+                await izAsset.connect(sa.dummy2.signer).approve(boostedDualVault.address, 1)
                 await expect(boostedDualVault.connect(sa.dummy2.signer)["stake(uint256)"](1)).to.be.revertedWith("VM Exception")
             })
         })
@@ -633,13 +633,13 @@ describe("BoostedDualVault", async () => {
 
     context("calculating a users boost", async () => {
         context("with a price coefficient of 30000 bucks", () => {
-            // 1 mBTC = 30k, 1 imBTC = 3k
+            // 1 zBTC = 30k, 1 izBTC = 3k
             const priceCoeffOverride = simpleToExactAmount(3000, 18)
             beforeEach(async () => {
                 boostedDualVault = await redeployRewards(priceCoeffOverride)
             })
-            // 10k imUSD = 1k $ = 0.33 imBTC
-            it("should calculate boost for 10k imUSD stake and 250 vMTA", async () => {
+            // 10k izUSD = 1k $ = 0.33 izBTC
+            it("should calculate boost for 10k izUSD stake and 250 vMTA", async () => {
                 const deposit = simpleToExactAmount(3333, 14)
                 const stake = simpleToExactAmount(250, 18)
                 const expectedBoost = simpleToExactAmount(7483, 14)
@@ -655,8 +655,8 @@ describe("BoostedDualVault", async () => {
                 const ratio = await boostedDualVault.getBoost(sa.default.address)
                 assertBNClosePercent(ratio, simpleToExactAmount(2.2453))
             })
-            // 10k imUSD = 1k $ = 0.33 imBTC
-            it("should calculate boost for 10k imUSD stake and 50 vMTA", async () => {
+            // 10k izUSD = 1k $ = 0.33 izBTC
+            it("should calculate boost for 10k izUSD stake and 50 vMTA", async () => {
                 const deposit = simpleToExactAmount(3333, 14)
                 const stake = simpleToExactAmount(50, 18)
                 const expectedBoost = simpleToExactAmount(4110, 14)
@@ -672,8 +672,8 @@ describe("BoostedDualVault", async () => {
                 const ratio = await boostedDualVault.getBoost(sa.default.address)
                 assertBNClosePercent(ratio, simpleToExactAmount(1.2331, 18), "0.1")
             })
-            // 100k imUSD = 10k $ = 3.33 imBTC
-            it("should calculate boost for 100k imUSD stake and 500 vMTA", async () => {
+            // 100k izUSD = 10k $ = 3.33 izBTC
+            it("should calculate boost for 100k izUSD stake and 500 vMTA", async () => {
                 const deposit = simpleToExactAmount(3333, 15)
                 const stake = simpleToExactAmount(500, 18)
                 const expectedBoost = simpleToExactAmount("4766.19", 15)
@@ -696,7 +696,7 @@ describe("BoostedDualVault", async () => {
                 boostedDualVault = await redeployRewards()
             })
             describe("when saving and with staking balance", () => {
-                it("should calculate boost for 10k imUSD stake and 250 vMTA", async () => {
+                it("should calculate boost for 10k izUSD stake and 250 vMTA", async () => {
                     const deposit = simpleToExactAmount(10000)
                     const stake = simpleToExactAmount(250, 18)
                     const expectedBoost = simpleToExactAmount(22453)
@@ -711,7 +711,7 @@ describe("BoostedDualVault", async () => {
                     const ratio = await boostedDualVault.getBoost(sa.default.address)
                     assertBNClosePercent(ratio, simpleToExactAmount(2.2453))
                 })
-                it("should calculate boost for 10k imUSD stake and 50 vMTA", async () => {
+                it("should calculate boost for 10k izUSD stake and 50 vMTA", async () => {
                     const deposit = simpleToExactAmount(10000, 18)
                     const stake = simpleToExactAmount(50, 18)
                     const expectedBoost = simpleToExactAmount(12331, 18)
@@ -726,7 +726,7 @@ describe("BoostedDualVault", async () => {
                     const ratio = await boostedDualVault.getBoost(sa.default.address)
                     assertBNClosePercent(ratio, simpleToExactAmount(1.2331, 18), "0.1")
                 })
-                it("should calculate boost for 100k imUSD stake and 500 vMTA", async () => {
+                it("should calculate boost for 100k izUSD stake and 500 vMTA", async () => {
                     const deposit = simpleToExactAmount(100000, 18)
                     const stake = simpleToExactAmount(500, 18)
                     const expectedBoost = simpleToExactAmount(143000, 18)
@@ -927,8 +927,8 @@ describe("BoostedDualVault", async () => {
                 boostedDualVault = await redeployRewards()
                 staker2 = sa.dummy1
                 staker3 = sa.dummy2
-                await imAsset.transfer(staker2.address, staker2Stake)
-                await imAsset.transfer(staker3.address, staker3Stake)
+                await izAsset.transfer(staker2.address, staker2Stake)
+                await izAsset.transfer(staker3.address, staker3Stake)
             })
             it("should accrue rewards on a pro rata basis", async () => {
                 /*
@@ -1040,9 +1040,9 @@ describe("BoostedDualVault", async () => {
         before(async () => {
             rewardToken = await new MockERC20__factory(sa.default.signer).deploy("Reward", "RWD", 12, rewardsDistributor.address, 10000000)
             platformToken = await new MockERC20__factory(sa.default.signer).deploy("Plat", "PLT", 12, rewardsDistributor.address, 10000000)
-            imAsset = await new MockERC20__factory(sa.default.signer).deploy(
-                "Interest bearing mUSD",
-                "imUSD",
+            izAsset = await new MockERC20__factory(sa.default.signer).deploy(
+                "Interest bearing zUSD",
+                "izUSD",
                 16,
                 sa.default.address,
                 1000000,
@@ -1054,7 +1054,7 @@ describe("BoostedDualVault", async () => {
             const vaultFactory = new BoostedDualVault__factory(sa.default.signer)
             const impl = await vaultFactory.deploy(
                 nexus.address,
-                imAsset.address,
+                izAsset.address,
                 boostDirector.address,
                 priceCoeff,
                 coeff,
@@ -1623,8 +1623,8 @@ describe("BoostedDualVault", async () => {
                     minAmountOut: stakeAmount.mul(98).div(100),
                     isBassetOut: true,
                     beneficiary: sa.default,
-                    output: imAsset, // bAsset,
-                    router: imAsset, // mAsset,
+                    output: izAsset, // bAsset,
+                    router: izAsset, // zAsset,
                 }
             })
             it("should revert for a non-staker", async () => {

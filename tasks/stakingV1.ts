@@ -18,7 +18,7 @@ task("eject-stakers", "Ejects expired stakers from Meta staking contract (vMTA)"
         // Check it's been more than 7 days since the last eject has been run
 
         // get stakers from API
-        const response = await axios.get("https://api-dot-mstable.appspot.com/stakers")
+        const response = await axios.get("https://api-dot-xzeno.appspot.com/stakers")
         const stakers = response.data.ejected
 
         if (stakers.length === 0) {

@@ -32,7 +32,7 @@ interface MultiMintReserves {
 
 interface RedeemData {
     bAssetIndex: string
-    mAssetQty: string
+    zAssetQty: string
     expectedQty: string
 }
 
@@ -146,7 +146,7 @@ const parseRedeemTestRecords = async (parser: parse.Parser): Promise<RedeemReser
         if (record[0] === "reserve0") continue
         const redeem: RedeemData = {
             bAssetIndex: record[3],
-            mAssetQty: record[4],
+            zAssetQty: record[4],
             expectedQty: record[5],
         }
         // If the reserves are different from the last
@@ -240,19 +240,19 @@ const parseCsvFile = async <T>(testFilename: string, recordParser: (parser: pars
 }
 
 const main = async () => {
-    const mintData = await parseCsvFile<MintReserves>("./mbtc_test_mint.csv", parseMintTestRecords)
+    const mintData = await parseCsvFile<MintReserves>("./zbtc_test_mint.csv", parseMintTestRecords)
     fs.writeFileSync("mintTestData.json", JSON.stringify(mintData))
 
-    const multiMintData = await parseCsvFile<MultiMintReserves>("./mbtc_test_multi_mint.csv", parseMultiMintTestRecords)
+    const multiMintData = await parseCsvFile<MultiMintReserves>("./zbtc_test_multi_mint.csv", parseMultiMintTestRecords)
     fs.writeFileSync("multiMintTestData.json", JSON.stringify(multiMintData))
 
-    const redeemData = await parseCsvFile<RedeemReserves>("./mbtc_test_redeem.csv", parseRedeemTestRecords)
+    const redeemData = await parseCsvFile<RedeemReserves>("./zbtc_test_redeem.csv", parseRedeemTestRecords)
     fs.writeFileSync("redeemTestData.json", JSON.stringify(redeemData))
 
-    const redeemExactData = await parseCsvFile<RedeemExactReserves>("./mbtc_test_multi_redeem.csv", parseRedeemExactTestRecords)
+    const redeemExactData = await parseCsvFile<RedeemExactReserves>("./zbtc_test_multi_redeem.csv", parseRedeemExactTestRecords)
     fs.writeFileSync("redeemExactTestData.json", JSON.stringify(redeemExactData))
 
-    const swapData = await parseCsvFile<SwapReserves>("./mbtc_test_swap.csv", parseSwapTestRecords)
+    const swapData = await parseCsvFile<SwapReserves>("./zbtc_test_swap.csv", parseSwapTestRecords)
     fs.writeFileSync("swapTestData.json", JSON.stringify(swapData))
 }
 

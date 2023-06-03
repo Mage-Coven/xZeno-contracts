@@ -74,8 +74,8 @@ export const deployEmissionsController = async (
         dialRecipients = [
             mtaStakingAddress,
             mbptStakingAddress,
-            resolveAddress("mUSD", chain, "vault"),
-            resolveAddress("mBTC", chain, "vault"),
+            resolveAddress("zUSD", chain, "vault"),
+            resolveAddress("zBTC", chain, "vault"),
             resolveAddress("GUSD", chain, "vault"),
             resolveAddress("BUSD", chain, "vault"),
             resolveAddress("alUSD", chain, "vault"),
@@ -93,8 +93,8 @@ export const deployEmissionsController = async (
         dialRecipients = [
             mtaStakingAddress,
             mbptStakingAddress,
-            resolveAddress("mUSD", chain, "vault"),
-            resolveAddress("mBTC", chain, "vault"),
+            resolveAddress("zUSD", chain, "vault"),
+            resolveAddress("zBTC", chain, "vault"),
         ]
         caps = [10, 10, 0, 0]
         notifies = [true, true, true, true]
@@ -374,7 +374,7 @@ export const deploySplitRevenueBuyBack = async (
     const mtaAddress = resolveAddress("MTA", chain)
     const uniswapRouterAddress = resolveAddress("UniswapRouterV3", chain)
     const emissionsControllerAddress = resolveAddress("EmissionsController", chain)
-    const treasuryAddress = resolveAddress("mStableDAO", chain)
+    const treasuryAddress = resolveAddress("xZenoDAO", chain)
 
     // Deploy RevenueBuyBack
     const constructorArguments: [string, string, string, string] = [
