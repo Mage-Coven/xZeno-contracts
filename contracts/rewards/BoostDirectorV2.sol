@@ -24,7 +24,7 @@ contract BoostDirectorV2 is IBoostDirector, ImmutableModule {
 
     event BalanceDivisorChanged(uint256 newDivisor);
 
-    // Read the vMTA balance from here
+    // Read the vZENO balance from here
     IERC20[] public stakedTokenContracts;
 
     // Whitelisted vaults set by governance (only these vaults can read balances)

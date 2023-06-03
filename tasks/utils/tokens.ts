@@ -26,8 +26,8 @@ export interface Token {
     vault?: string
     savings?: string // interest-bearing savings contracts
     platformTokenVendor?: string // hold WMATIC on Polygon's v-izUSD vault
-    bridgeForwarder?: string // Mainnet contract that forwards MTA rewards from the Emissions Controller to the L2 Bridge
-    bridgeRecipient?: string // L2 contract that receives bridge MTA rewards from the L2 Bridge
+    bridgeForwarder?: string // Mainnet contract that forwards ZENO rewards from the Emissions Controller to the L2 Bridge
+    bridgeRecipient?: string // L2 contract that receives bridge ZENO rewards from the L2 Bridge
     priceGetter?: string // Contract for price of asset, used for NonPeggedFeederPool
     gauge?: string // Curve or Balancer gauge for rewards
 }
@@ -382,25 +382,25 @@ export const TBTCv2: Token = {
     vault: "0x97E2a2F97A2E9a4cFB462a49Ab7c8D205aBB9ed9",
 }
 
-export const MTA: Token = {
-    symbol: "MTA",
+export const ZENO: Token = {
+    symbol: "ZENO",
     address: "0xa3BeD4E1c75D00fa6f4E5E6922DB7261B5E9AcD2",
     chain: Chain.mainnet,
     decimals: 18,
     quantityFormatter: "USD",
-    vault: "0x8f2326316eC696F6d023E37A9931c2b2C177a3D7", // MTA Staking V2
+    vault: "0x8f2326316eC696F6d023E37A9931c2b2C177a3D7", // ZENO Staking V2
 }
 
-export const PMTA: Token = {
-    symbol: "MTA",
+export const PZENO: Token = {
+    symbol: "ZENO",
     address: "0xF501dd45a1198C2E1b5aEF5314A68B9006D842E0",
     chain: Chain.polygon,
     decimals: 18,
     quantityFormatter: "USD",
 }
 
-export const RMTA: Token = {
-    symbol: "MTA",
+export const RZENO: Token = {
+    symbol: "ZENO",
     address: "0x273bc479E5C21CAA15aA8538DecBF310981d14C0",
     chain: Chain.ropsten,
     decimals: 18,
@@ -408,10 +408,10 @@ export const RMTA: Token = {
     vault: "0x4d8E465ba7FACa907E8A5F39649e056bB14802D1",
 }
 
-// Old MTA staking contract
-// Was previously vault on MTA but that is now the MTA Staking V2 contract
-export const vMTA: Token = {
-    symbol: "vMTA",
+// Old ZENO staking contract
+// Was previously vault on ZENO but that is now the ZENO Staking V2 contract
+export const vZENO: Token = {
+    symbol: "vZENO",
     address: "0xaE8bC96DA4F9A9613c323478BE181FDb2Aa0E1BF",
     chain: Chain.mainnet,
     decimals: 18,
@@ -515,10 +515,10 @@ export const tokens = [
     AAVE,
     stkAAVE,
     COMP,
-    MTA,
-    PMTA,
-    RMTA,
-    vMTA,
+    ZENO,
+    PZENO,
+    RZENO,
+    vZENO,
     zUSD,
     zBTC,
     sUSD,

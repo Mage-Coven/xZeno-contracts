@@ -7,7 +7,7 @@ import { resolveAddress } from "tasks/utils/networkAddressFactory"
 import { deploySplitRevenueBuyBack } from "tasks/utils/emissions-utils"
 import { expect } from "chai"
 import { simpleToExactAmount } from "@utils/math"
-import { DAI, zBTC, MTA, zUSD, USDC, WBTC } from "tasks/utils/tokens"
+import { DAI, zBTC, ZENO, zUSD, USDC, WBTC } from "tasks/utils/tokens"
 import {
     EmissionsController,
     EmissionsController__factory,
@@ -20,13 +20,13 @@ import {
 import { Account } from "types/common"
 import { encodeUniswapPath } from "@utils/peripheral/uniswap"
 
-const mtaUsdPrice = 42
+const zenoUsdPrice = 42
 const btcUsdPrice = 42300
 
 const uniswapEthToken = resolveAddress("UniswapEthToken")
-const zusdUniswapPath = encodeUniswapPath([USDC.address, uniswapEthToken, MTA.address], [3000, 3000])
-// const zbtcUniswapPath = encodeUniswapPath([WBTC.address, uniswapEthToken, MTA.address], [3000, 3000])
-const zbtcUniswapPath = encodeUniswapPath([WBTC.address, uniswapEthToken, DAI.address, MTA.address], [3000, 3000, 3000])
+const zusdUniswapPath = encodeUniswapPath([USDC.address, uniswapEthToken, ZENO.address], [3000, 3000])
+// const zbtcUniswapPath = encodeUniswapPath([WBTC.address, uniswapEthToken, ZENO.address], [3000, 3000])
+const zbtcUniswapPath = encodeUniswapPath([WBTC.address, uniswapEthToken, DAI.address, ZENO.address], [3000, 3000, 3000])
 
 describe("Fork test deploy of RevenueSplitBuyBack", async () => {
     let ops: Signer
@@ -34,7 +34,7 @@ describe("Fork test deploy of RevenueSplitBuyBack", async () => {
     let treasury: Account
     let emissionsController: EmissionsController
     let savingsManager: SavingsManager
-    let mta: IERC20
+    let zeno: IERC20
     let revenueBuyBack: RevenueSplitBuyBack
 
     const setup = async (blockNumber?: number) => {
@@ -53,7 +53,7 @@ describe("Fork test deploy of RevenueSplitBuyBack", async () => {
         governor = await impersonate(resolveAddress("Governor"))
         treasury = await impersonateAccount("0x3dd46846eed8d147841ae162c8425c08bd8e1b41")
 
-        mta = IERC20__factory.connect(MTA.address, treasury.signer)
+        zeno = IERC20__factory.connect(ZENO.address, treasury.signer)
 
         const emissionsControllerAddress = resolveAddress("EmissionsController")
         emissionsController = EmissionsController__factory.connect(emissionsControllerAddress, ops)
@@ -84,7 +84,7 @@ describe("Fork test deploy of RevenueSplitBuyBack", async () => {
             await savingsManager.setRevenueRecipient(zUSD.address, revenueBuyBack.address)
             await savingsManager.setRevenueRecipient(zBTC.address, revenueBuyBack.address)
         })
-        context("buy back MTA using zUSD and zBTC", () => {
+        context("buy back ZENO using zUSD and zBTC", () => {
             before(async () => {})
             it("Distribute unallocated zUSD in Savings Manager", async () => {
                 expect(await zusdToken.balanceOf(revenueBuyBack.address), "zUSD bal before").to.eq(0)
@@ -100,46 +100,46 @@ describe("Fork test deploy of RevenueSplitBuyBack", async () => {
 
                 expect(await zbtcToken.balanceOf(revenueBuyBack.address), "zBTC bal after").to.gt(0)
             })
-            it("Buy back MTA using zUSD", async () => {
+            it("Buy back ZENO using zUSD", async () => {
                 const zusdRbbBalBefore = await zusdToken.balanceOf(revenueBuyBack.address)
                 expect(zusdRbbBalBefore, "zUSD bal before").to.gt(0)
-                expect(await mta.balanceOf(revenueBuyBack.address), "RBB MTA bal before").to.eq(0)
+                expect(await zeno.balanceOf(revenueBuyBack.address), "RBB ZENO bal before").to.eq(0)
 
                 // 1% slippage on redeem, 50% to treasury and convert from 18 to 6 decimals
                 const minBassets = zusdRbbBalBefore.mul(99).div(100).div(2).div(1e12)
                 console.log(`minBassets ${minBassets} = ${zusdRbbBalBefore} * 98% / 1e12`)
-                // MTA = USD * MTA/USD price * 10^(18-6) to convert from 6 to 18 decimals
-                const minMta = minBassets.mul(mtaUsdPrice).div(100).mul(1e12)
-                await revenueBuyBack.buyBackRewards([zUSD.address], [minBassets], [minMta], [zusdUniswapPath.encoded])
+                // ZENO = USD * ZENO/USD price * 10^(18-6) to convert from 6 to 18 decimals
+                const minZeno = minBassets.mul(zenoUsdPrice).div(100).mul(1e12)
+                await revenueBuyBack.buyBackRewards([zUSD.address], [minBassets], [minZeno], [zusdUniswapPath.encoded])
 
                 expect(await zusdToken.balanceOf(revenueBuyBack.address), "zUSD bal after").to.eq(0)
-                expect(await mta.balanceOf(revenueBuyBack.address), "RBB MTA bal after").to.gt(1)
+                expect(await zeno.balanceOf(revenueBuyBack.address), "RBB ZENO bal after").to.gt(1)
             })
-            it("Buy back MTA using zBTC", async () => {
+            it("Buy back ZENO using zBTC", async () => {
                 const zbtcRbbBalBefore = await zbtcToken.balanceOf(revenueBuyBack.address)
-                const mtaRbbBalBefore = await mta.balanceOf(revenueBuyBack.address)
+                const zenoRbbBalBefore = await zeno.balanceOf(revenueBuyBack.address)
 
                 // 1% slippage on redeem, 50% to treasury and convert from 18 to 8 decimals
                 const minBassets = zbtcRbbBalBefore.mul(99).div(100).div(2).div(1e10)
                 console.log(`minBassets ${minBassets} = ${zbtcRbbBalBefore} * 98% / 1e10`)
-                // MTA = BTC * BTC/USD price * MTA/USD price * 10^(18-8) to convert from 8 to 18 decimals
-                const minMta = minBassets.mul(btcUsdPrice).mul(mtaUsdPrice).div(100).mul(1e10)
-                await revenueBuyBack.buyBackRewards([zBTC.address], [minBassets], [minMta], [zbtcUniswapPath.encoded])
+                // ZENO = BTC * BTC/USD price * ZENO/USD price * 10^(18-8) to convert from 8 to 18 decimals
+                const minZeno = minBassets.mul(btcUsdPrice).mul(zenoUsdPrice).div(100).mul(1e10)
+                await revenueBuyBack.buyBackRewards([zBTC.address], [minBassets], [minZeno], [zbtcUniswapPath.encoded])
 
                 expect(await zbtcToken.balanceOf(revenueBuyBack.address), "zBTC bal after").to.eq(0)
 
-                expect(await mta.balanceOf(revenueBuyBack.address), "RBB MTA bal after").to.gt(mtaRbbBalBefore)
+                expect(await zeno.balanceOf(revenueBuyBack.address), "RBB ZENO bal after").to.gt(zenoRbbBalBefore)
             })
-            it("Donate MTA to Emissions Controller staking dials", async () => {
-                const mtaEcBalBefore = await mta.balanceOf(emissionsController.address)
-                const mtaRbbBalBefore = await mta.balanceOf(revenueBuyBack.address)
-                expect(mtaRbbBalBefore, "RBB MTA bal before").to.gt(0)
+            it("Donate ZENO to Emissions Controller staking dials", async () => {
+                const zenoEcBalBefore = await zeno.balanceOf(emissionsController.address)
+                const zenoRbbBalBefore = await zeno.balanceOf(revenueBuyBack.address)
+                expect(zenoRbbBalBefore, "RBB ZENO bal before").to.gt(0)
 
                 await revenueBuyBack.donateRewards()
 
-                expect(await mta.balanceOf(revenueBuyBack.address), "RBB MTA bal after").to.lte(1)
-                expect(await mta.balanceOf(emissionsController.address), "EC MTA bal after").to.eq(
-                    mtaEcBalBefore.add(mtaRbbBalBefore).sub(1),
+                expect(await zeno.balanceOf(revenueBuyBack.address), "RBB ZENO bal after").to.lte(1)
+                expect(await zeno.balanceOf(emissionsController.address), "EC ZENO bal after").to.eq(
+                    zenoEcBalBefore.add(zenoRbbBalBefore).sub(1),
                 )
             })
         })

@@ -8,7 +8,7 @@ import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 /**
  * @title  RewardsDistributor
  * @author xZeno
- * @notice RewardsDistributor allows Fund Managers to send rewards (usually in MTA)
+ * @notice RewardsDistributor allows Fund Managers to send rewards (usually in ZENO)
  * to specified Reward Recipients.
  */
 contract RewardsDistributor is ImmutableModule {

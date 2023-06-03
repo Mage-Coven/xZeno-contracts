@@ -9,7 +9,7 @@ import { ethers, network } from "hardhat"
 import { deployContract } from "tasks/utils/deploy-utils"
 import { deployFeederPool, deployVault, FeederData, VaultData } from "tasks/utils/feederUtils"
 import { getChainAddress } from "tasks/utils/networkAddressFactory"
-import { AAVE, ALCX, alUSD, Chain, COMP, DAI, MTA, zUSD, stkAAVE, USDC } from "tasks/utils/tokens"
+import { AAVE, ALCX, alUSD, Chain, COMP, DAI, ZENO, zUSD, stkAAVE, USDC } from "tasks/utils/tokens"
 import {
     AlchemixIntegration,
     BoostedVault,
@@ -61,7 +61,7 @@ context("alUSD Feeder Pool integration to Alchemix", () => {
     let zusdToken: IERC20
     let alusdToken: IERC20
     let alcxToken: IERC20
-    let mtaToken: IERC20
+    let zenoToken: IERC20
     let alchemixIntegration: AlchemixIntegration
     let alchemixStakingPools: IAlchemixStakingPools
     let poolId: BN
@@ -106,7 +106,7 @@ context("alUSD Feeder Pool integration to Alchemix", () => {
         zusdToken = await IERC20__factory.connect(zUSD.address, deployer)
         alusdToken = await IERC20__factory.connect(alUSD.address, deployer)
         alcxToken = await IERC20__factory.connect(ALCX.address, deployer)
-        mtaToken = await IERC20__factory.connect(MTA.address, deployer)
+        zenoToken = await IERC20__factory.connect(ZENO.address, deployer)
         alchemixStakingPools = await IAlchemixStakingPools__factory.connect(alchemixStakingPoolsAddress, deployer)
         poolId = (await alchemixStakingPools.tokenPoolIds(alUSD.address)).sub(1)
         liquidator = await Liquidator__factory.connect(liquidatorAddress, governor)
@@ -194,21 +194,21 @@ context("alUSD Feeder Pool integration to Alchemix", () => {
                     symbol: "v-fPzUSD/alUSD",
                     priceCoeff: simpleToExactAmount(1),
                     stakingToken: alUsdFp.address,
-                    rewardToken: MTA.address,
+                    rewardToken: ZENO.address,
                 }
 
                 vault = (await deployVault(hre, vaultData)) as BoostedVault
             })
-            it("Distribute MTA rewards to vault", async () => {
+            it("Distribute ZENO rewards to vault", async () => {
                 const distributionAmount = simpleToExactAmount(20000)
-                const fundManagerMtaBalBefore = await mtaToken.balanceOf(fundManagerAddress)
-                expect(fundManagerMtaBalBefore, "fund manager mta bal before").to.gt(distributionAmount)
+                const fundManagerZenoBalBefore = await zenoToken.balanceOf(fundManagerAddress)
+                expect(fundManagerZenoBalBefore, "fund manager zeno bal before").to.gt(distributionAmount)
 
-                await mtaToken.connect(fundManager).approve(rewardsDistributor.address, distributionAmount)
+                await zenoToken.connect(fundManager).approve(rewardsDistributor.address, distributionAmount)
                 await rewardsDistributor.connect(fundManager).distributeRewards([vault.address], [distributionAmount])
 
-                expect(await mtaToken.balanceOf(fundManagerAddress), "fund manager mta bal before").to.eq(
-                    fundManagerMtaBalBefore.sub(distributionAmount),
+                expect(await zenoToken.balanceOf(fundManagerAddress), "fund manager zeno bal before").to.eq(
+                    fundManagerZenoBalBefore.sub(distributionAmount),
                 )
             })
             it("stake fPzUSD/alUSD in vault", async () => {
@@ -220,13 +220,13 @@ context("alUSD Feeder Pool integration to Alchemix", () => {
 
                 expect(await vault.balanceOf(alUsdWhaleAddress), "whale v-fp bal after").to.eq(stakeAmount)
             })
-            it("whale claims MTA from vault", async () => {
+            it("whale claims ZENO from vault", async () => {
                 await increaseTime(ONE_DAY.mul(5))
-                expect(await mtaToken.balanceOf(alUsdWhaleAddress), "whale mta bal before").to.eq(0)
+                expect(await zenoToken.balanceOf(alUsdWhaleAddress), "whale zeno bal before").to.eq(0)
 
                 await vault.connect(alUsdWhale).claimReward()
 
-                expect(await mtaToken.balanceOf(alUsdWhaleAddress), "whale mta bal after").to.gt(0)
+                expect(await zenoToken.balanceOf(alUsdWhaleAddress), "whale zeno bal after").to.gt(0)
             })
         })
         describe("Integration", () => {

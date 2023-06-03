@@ -26,7 +26,7 @@ task("deploy-emissions-polly", "Deploys L2EmissionsController and L2 Bridge Reci
     .setAction(async (taskArgs, hre) => {
         const signer = await getSigner(hre, taskArgs.speed)
         const chain = getChain(hre)
-        const streamerAddress = resolveAddress("BpMTAStreamer", chain)
+        const streamerAddress = resolveAddress("BpZENOStreamer", chain)
 
         const l2EmissionsController = await deployL2EmissionsController(signer, hre)
         console.log(`Set EmissionsController contract name in networkAddressFactory to ${l2EmissionsController.address}`)
@@ -71,7 +71,7 @@ task("deploy-bridge-forwarder", "Deploys a BridgeForwarder contract on mainnet f
     })
 
 task("deploy-basic-forwarder", "Deploys a basic rewards forwarder from the emissions controller.")
-    .addParam("recipient", "Contract or EOA that will receive the MTA rewards.", undefined, types.string)
+    .addParam("recipient", "Contract or EOA that will receive the ZENO rewards.", undefined, types.string)
     .addOptionalParam("owner", "Contract owner to transfer ownership to after deployment.", undefined, types.string)
     .addOptionalParam("speed", "Defender Relayer speed param: 'safeLow' | 'average' | 'fast' | 'fastest'", "fast", types.string)
     .setAction(async (taskArgs, hre) => {
@@ -125,7 +125,7 @@ task("deploy-mock-root-chain-manager", "Deploys a mocked Polygon PoS Bridge")
     })
 
 task("deploy-bal-reward-forwarder", "Deploys a basic rewards forwarder from the emissions controller.")
-    .addParam("recipient", "Contract or EOA that will receive the MTA rewards.", undefined, types.string)
+    .addParam("recipient", "Contract or EOA that will receive the ZENO rewards.", undefined, types.string)
     .addOptionalParam("owner", "Contract owner to transfer ownership to after deployment.", undefined, types.string)
     .addOptionalParam("speed", "Defender Relayer speed param: 'safeLow' | 'average' | 'fast' | 'fastest'", "fast", types.string)
     .setAction(async (taskArgs, hre) => {

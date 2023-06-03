@@ -37,7 +37,7 @@ contract BoostedTokenWrapper is InitializableReentrancyGuard {
 
     // Vars for use in the boost calculations
     uint256 private constant MIN_DEPOSIT = 1e18;
-    uint256 private constant MAX_VMTA = 600000e18;
+    uint256 private constant MAX_VZENO = 600000e18;
     uint256 private constant MAX_BOOST = 3e18;
     uint256 private constant MIN_BOOST = 1e18;
     uint256 private constant FLOOR = 98e16;
@@ -47,7 +47,7 @@ contract BoostedTokenWrapper is InitializableReentrancyGuard {
     /**
      * @dev TokenWrapper constructor
      * @param _stakingToken Wrapped token to be staked
-     * @param _boostDirector vMTA boost director
+     * @param _boostDirector vZENO boost director
      * @param _priceCoeff Rough price of a given LP token, to be used in boost calculations, where $1 = 1e18
      * @param _boostCoeff  Boost coefficent using the the boost formula
      */
@@ -146,7 +146,7 @@ contract BoostedTokenWrapper is InitializableReentrancyGuard {
 
     /**
      * @dev Updates the boost for the given address according to the formula
-     * boost = min(0.5 + c * vMTA_balance / izUSD_locked^(7/8), 1.5)
+     * boost = min(0.5 + c * vZENO_balance / izUSD_locked^(7/8), 1.5)
      * If rawBalance <= MIN_DEPOSIT, boost is 0
      * @param _account User for which to update the boost
      */
@@ -194,7 +194,7 @@ contract BoostedTokenWrapper is InitializableReentrancyGuard {
         uint256 sqrt2 = Root.sqrt(sqrt1);
         uint256 denominator = sqrt1 * sqrt2;
         boost =
-            (((StableMath.min(_votingWeight, MAX_VMTA) * boostCoeff) / 10) * 1e18) /
+            (((StableMath.min(_votingWeight, MAX_VZENO) * boostCoeff) / 10) * 1e18) /
             denominator;
         boost = StableMath.min(MAX_BOOST, StableMath.max(MIN_BOOST, FLOOR + boost));
     }

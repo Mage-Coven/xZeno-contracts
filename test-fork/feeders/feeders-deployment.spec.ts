@@ -31,7 +31,7 @@ interface CommonAddresses {
     nexus: string
     proxyAdmin: string
     staking: string
-    mta: string
+    zeno: string
     rewardsDistributor: string
     aave?: string
     aaveToken?: string
@@ -220,7 +220,7 @@ const deployVault = async (
     console.log(
         `Deploying Vault Impl with LP token ${lpToken}, director ${addresses.boostDirector}, priceCoeff ${formatEther(
             priceCoeff,
-        )}, coeff ${COEFF}, mta: ${addresses.mta}}`,
+        )}, coeff ${COEFF}, zeno: ${addresses.zeno}}`,
     )
     const vImpl = await new BoostedVault__factory(sender).deploy(
         addresses.nexus,
@@ -228,7 +228,7 @@ const deployVault = async (
         addresses.boostDirector,
         priceCoeff,
         COEFF,
-        addresses.mta,
+        addresses.zeno,
     )
     const receiptVaultImpl = await vImpl.deployTransaction.wait()
     console.log(`Deployed Vault Impl to ${vImpl.address}. gas used ${receiptVaultImpl.gasUsed}`)
@@ -303,7 +303,7 @@ context("deploying feeder", () => {
         const deployer = await impersonate(deployerAddress)
 
         const addresses: CommonAddresses = {
-            mta: "0xa3BeD4E1c75D00fa6f4E5E6922DB7261B5E9AcD2",
+            zeno: "0xa3BeD4E1c75D00fa6f4E5E6922DB7261B5E9AcD2",
             staking: "0xae8bc96da4f9a9613c323478be181fdb2aa0e1bf",
             nexus: "0xafce80b19a8ce13dec0739a1aab7a028d6845eb3",
             proxyAdmin: "0x5c8eb57b44c1c6391fc7a8a0cf44d26896f92386",

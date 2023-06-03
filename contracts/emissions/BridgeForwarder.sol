@@ -22,7 +22,7 @@ contract BridgeForwarder is
 {
     using SafeERC20 for IERC20;
 
-    /// @notice Token the rewards are distributed in. eg MTA
+    /// @notice Token the rewards are distributed in. eg ZENO
     IERC20 public immutable REWARDS_TOKEN;
     /// @notice Polygon PoS Bridge contract that takes deposits on mainnet.
     IRootChainManager public immutable ROOT_CHAIN_MANAGER;
@@ -35,7 +35,7 @@ contract BridgeForwarder is
 
     /**
      * @param _nexus             xZeno system Nexus address
-     * @param _rewardsToken      First token that is being distributed as a reward. eg MTA
+     * @param _rewardsToken      First token that is being distributed as a reward. eg ZENO
      * @param _bridgeTokenLocker Mainnet bridge contract that receives and locks tokens for the L2 bridge.
      * @param _rootChainManager  Mainnet contract called to deposit tokens to the L2 bridge.
      * @param _bridgeRecipient   Polygon contract that will receive the bridged rewards on the Polygon chain
@@ -61,7 +61,7 @@ contract BridgeForwarder is
     /**
      * @dev Initialization function for upgradable proxy contract.
      *      This function should be called via Proxy just after contract deployment.
-     * @param _emissionsController xZeno Emissions Controller that distributes MTA rewards
+     * @param _emissionsController xZeno Emissions Controller that distributes ZENO rewards
      */
     function initialize(address _emissionsController) external initializer {
         InitializableRewardsDistributionRecipient._initialize(_emissionsController);
@@ -72,7 +72,7 @@ contract BridgeForwarder is
 
     /**
      * @notice Called by the Emissions Controller to trigger the processing of the weekly rewards.
-     * @dev    The Emissions Controller has already transferred the MTA to this contract.
+     * @dev    The Emissions Controller has already transferred the ZENO to this contract.
      * @param _rewards The amount of reward tokens that were distributed to this contract
      */
     function notifyRewardAmount(uint256 _rewards)

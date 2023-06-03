@@ -44,7 +44,7 @@ contract BoostedDualVault is
     event Poked(address indexed user);
     event RewardPaid(address indexed user, uint256 reward, uint256 platformReward);
 
-    /// @notice token the rewards are distributed in. eg MTA
+    /// @notice token the rewards are distributed in. eg ZENO
     IERC20 public immutable rewardsToken;
     /// @notice token the platform rewards are distributed in. eg WMATIC
     IERC20 public immutable platformToken;
@@ -95,11 +95,11 @@ contract BoostedDualVault is
 
     /**
      * @param _nexus xZeno system Nexus address
-     * @param _stakingToken token that is being rewarded for being staked. eg MTA, izUSD or fPzUSD/GUSD
-     * @param _boostDirector vMTA boost director
+     * @param _stakingToken token that is being rewarded for being staked. eg ZENO, izUSD or fPzUSD/GUSD
+     * @param _boostDirector vZENO boost director
      * @param _priceCoeff Rough price of a given LP token, to be used in boost calculations, where $1 = 1e18
      * @param _boostCoeff  Boost coefficent using the the boost formula
-     * @param _rewardsToken first token that is being distributed as a reward. eg MTA
+     * @param _rewardsToken first token that is being distributed as a reward. eg ZENO
      * @param _platformToken second token that is being distributed as a reward. eg FXS for FRAX
      */
     constructor(

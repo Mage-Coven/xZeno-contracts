@@ -30,7 +30,7 @@ import "./deps/GamifiedTokenStructs.sol";
 contract StakedToken is GamifiedVotingToken, InitializableReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    /// @notice Core token that is staked and tracked (e.g. MTA)
+    /// @notice Core token that is staked and tracked (e.g. ZENO)
     IERC20 public immutable STAKED_TOKEN;
     /// @notice Seconds a user must wait after she initiates her cooldown before withdrawal is possible
     uint256 public immutable COOLDOWN_SECONDS;
@@ -67,9 +67,9 @@ contract StakedToken is GamifiedVotingToken, InitializableReentrancyGuard {
 
     /**
      * @param _nexus System nexus
-     * @param _rewardsToken Token that is being distributed as a reward. eg MTA
+     * @param _rewardsToken Token that is being distributed as a reward. eg ZENO
      * @param _questManager Centralised manager of quests
-     * @param _stakedToken Core token that is staked and tracked (e.g. MTA)
+     * @param _stakedToken Core token that is staked and tracked (e.g. ZENO)
      * @param _cooldownSeconds Seconds a user must wait after she initiates her cooldown before withdrawal is possible
      * @param _hasPriceCoeff true if raw staked amount is multiplied by price coeff to get staked amount. eg BPT Staked Token
      */
@@ -184,7 +184,7 @@ contract StakedToken is GamifiedVotingToken, InitializableReentrancyGuard {
     }
 
     /**
-     * @dev Gets the total number of staked tokens in this staking contract. eg MTA or mBPT.
+     * @dev Gets the total number of staked tokens in this staking contract. eg ZENO or mBPT.
      * Can be overridden if the tokens are held elsewhere. eg in the Balancer Pool Gauge.
      */
     function _balanceOfStakedTokens() internal view virtual returns (uint256 stakedTokens) {
@@ -233,7 +233,7 @@ contract StakedToken is GamifiedVotingToken, InitializableReentrancyGuard {
     /**
      * @dev Withdraw raw tokens from the system, following an elapsed cooldown period.
      * Note - May be subject to a transfer fee, depending on the users weightedTimestamp
-     * @param _amount Units of raw staking token to withdraw. eg MTA or mBPT
+     * @param _amount Units of raw staking token to withdraw. eg ZENO or mBPT
      * @param _recipient Address of beneficiary who will receive the raw tokens
      * @param _amountIncludesFee Is the `_amount` specified inclusive of any applicable redemption fee?
      * @param _exitCooldown Should we take this opportunity to exit the cooldown period?
@@ -250,7 +250,7 @@ contract StakedToken is GamifiedVotingToken, InitializableReentrancyGuard {
     /**
      * @dev Withdraw raw tokens from the system, following an elapsed cooldown period.
      * Note - May be subject to a transfer fee, depending on the users weightedTimestamp
-     * @param _amount Units of raw staking token to withdraw. eg MTA or mBPT
+     * @param _amount Units of raw staking token to withdraw. eg ZENO or mBPT
      * @param _recipient Address of beneficiary who will receive the raw tokens
      * @param _amountIncludesFee Is the `_amount` specified inclusive of any applicable redemption fee?
      * @param _exitCooldown Should we take this opportunity to exit the cooldown period?
@@ -306,7 +306,7 @@ contract StakedToken is GamifiedVotingToken, InitializableReentrancyGuard {
 
             // 5. Settle the withdrawal by burning the voting tokens
             _burnRaw(_msgSender(), totalWithdraw, exitCooldown, false);
-            // Log any redemption fee to the rewards contract if MTA or
+            // Log any redemption fee to the rewards contract if ZENO or
             // the staking token if mBPT.
             _notifyAdditionalReward(totalWithdraw - userWithdrawal);
             // Finally transfer staked tokens back to recipient
@@ -317,7 +317,7 @@ contract StakedToken is GamifiedVotingToken, InitializableReentrancyGuard {
     }
 
     /**
-     * @dev Transfers an `amount` of staked tokens to the withdraw `recipient`. eg MTA or mBPT.
+     * @dev Transfers an `amount` of staked tokens to the withdraw `recipient`. eg ZENO or mBPT.
      * Can be overridden if the tokens are held elsewhere. eg in the Balancer Pool Gauge.
      */
     function _withdrawStakedTokens(address _recipient, uint256 amount) internal virtual {

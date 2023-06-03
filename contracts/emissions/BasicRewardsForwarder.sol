@@ -22,7 +22,7 @@ contract BasicRewardsForwarder is
 {
     using SafeERC20 for IERC20;
 
-    /// @notice Token the rewards are distributed in. eg MTA
+    /// @notice Token the rewards are distributed in. eg ZENO
     IERC20 public immutable REWARDS_TOKEN;
     /// @notice Account that ultimately receives the reward tokens
     address public endRecipient;
@@ -32,7 +32,7 @@ contract BasicRewardsForwarder is
 
     /**
      * @param _nexus        xZeno system Nexus address
-     * @param _rewardsToken Token that is being distributed as a reward. eg MTA
+     * @param _rewardsToken Token that is being distributed as a reward. eg ZENO
      */
     constructor(address _nexus, address _rewardsToken)
         InitializableRewardsDistributionRecipient(_nexus)
@@ -43,7 +43,7 @@ contract BasicRewardsForwarder is
 
     /**
      * @dev Init fn
-     * @param _emissionsController xZeno Emissions Controller that distributes MTA rewards
+     * @param _emissionsController xZeno Emissions Controller that distributes ZENO rewards
      * @param _endRecipient        Account that ultimately receives the reward tokens
      */
     function initialize(address _emissionsController, address _endRecipient) external initializer {
@@ -55,7 +55,7 @@ contract BasicRewardsForwarder is
 
     /**
      * @notice Called by the Emissions Controller to trigger the processing of the weekly rewards.
-     * @dev    The Emissions Controller has already transferred the MTA to this contract.
+     * @dev    The Emissions Controller has already transferred the ZENO to this contract.
      * @param _rewards Units of reward tokens that were distributed to this contract
      */
     function notifyRewardAmount(uint256 _rewards)

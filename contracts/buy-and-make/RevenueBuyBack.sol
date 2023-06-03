@@ -25,7 +25,7 @@ struct RevenueBuyBackConfig {
 /**
  * @title   RevenueBuyBack
  * @author  xZeno
- * @notice  Uses protocol revenue to buy MTA rewards for stakers.
+ * @notice  Uses protocol revenue to buy ZENO rewards for stakers.
  * @dev     VERSION: 1.0
  *          DATE:    2021-11-09
  */
@@ -52,9 +52,9 @@ contract RevenueBuyBack is IRevenueRecipient, Initializable, ImmutableModule {
     /// @notice scale of the `minZasset2BassetPrice` and `minBasset2RewardsPrice` configuration properties.
     uint256 public constant CONFIG_SCALE = 1e18;
 
-    /// @notice address of the rewards token that is being purchased. eg MTA
+    /// @notice address of the rewards token that is being purchased. eg ZENO
     IERC20 public immutable REWARDS_TOKEN;
-    /// @notice address of the Emissions Controller that does the weekly MTA reward emissions based off on-chain voting power.
+    /// @notice address of the Emissions Controller that does the weekly ZENO reward emissions based off on-chain voting power.
     IEmissionsController public immutable EMISSIONS_CONTROLLER;
     /// @notice Uniswap V3 Router address
     IUniswapV3SwapRouter public immutable UNISWAP_ROUTER;
@@ -66,7 +66,7 @@ contract RevenueBuyBack is IRevenueRecipient, Initializable, ImmutableModule {
 
     /**
      * @param _nexus xZeno system Nexus address
-     * @param _rewardsToken Rewards token address that are purchased. eg MTA
+     * @param _rewardsToken Rewards token address that are purchased. eg ZENO
      * @param _uniswapRouter Uniswap V3 Router address
      * @param _emissionsController Emissions Controller address that rewards tokens are donated to.
      */
@@ -94,7 +94,7 @@ contract RevenueBuyBack is IRevenueRecipient, Initializable, ImmutableModule {
             _addStakingContract(_stakingDialIds[i]);
         }
 
-        // RevenueBuyBack approves the Emissions Controller to transfer rewards. eg MTA
+        // RevenueBuyBack approves the Emissions Controller to transfer rewards. eg ZENO
         REWARDS_TOKEN.safeApprove(address(EMISSIONS_CONTROLLER), type(uint256).max);
     }
 
@@ -117,7 +117,7 @@ contract RevenueBuyBack is IRevenueRecipient, Initializable, ImmutableModule {
     }
 
     /**
-     * @notice Buys reward tokens, eg MTA, using zAssets like zUSD or zBTC from protocol revenue.
+     * @notice Buys reward tokens, eg ZENO, using zAssets like zUSD or zBTC from protocol revenue.
      * @param _zAssets Addresses of zAssets that are to be sold for rewards. eg zUSD and zBTC.
      */
     function buyBackRewards(address[] calldata _zAssets) external onlyKeeperOrGovernor {
@@ -160,7 +160,7 @@ contract RevenueBuyBack is IRevenueRecipient, Initializable, ImmutableModule {
     }
 
     /**
-     * @notice donates purchased rewards, eg MTA, to staking contracts via the Emissions Controller.
+     * @notice donates purchased rewards, eg ZENO, to staking contracts via the Emissions Controller.
      */
     function donateRewards() external onlyKeeperOrGovernor {
         // STEP 1 - Get the voting power of the staking contracts
@@ -212,11 +212,11 @@ contract RevenueBuyBack is IRevenueRecipient, Initializable, ImmutableModule {
      * WBTC has 8 decimal places so `minZasset2BassetPrice` with no slippage is 1e8.
      * If a 5% slippage is allowed, the `minZasset2BassetPrice` is 95e6.
      * @param _minBasset2RewardsPrice Minimum price of rewards token compared to bAssets scaled to 1e18 (CONFIG_SCALE).
-     * eg USDC/MTA and wBTC/MTA exchange rates scaled to 1e18.
+     * eg USDC/ZENO and wBTC/ZENO exchange rates scaled to 1e18.
      * USDC only has 6 decimal places
-     * 2 MTA/USDC = 0.5 USDC/MTA * (1e18 / 1e6) * 1e18 = 0.5e30 = 5e29
+     * 2 ZENO/USDC = 0.5 USDC/ZENO * (1e18 / 1e6) * 1e18 = 0.5e30 = 5e29
      * wBTC only has 8 decimal places
-     * 0.000033 MTA/wBTC = 30,000 WBTC/MTA * (1e18 / 1e8) * 1e18 = 3e4 * 1e28 = 3e32
+     * 0.000033 ZENO/wBTC = 30,000 WBTC/ZENO * (1e18 / 1e8) * 1e18 = 3e4 * 1e28 = 3e32
      * @param _uniswapPath The Uniswap V3 bytes encoded path.
      */
     function setZassetConfig(
@@ -253,7 +253,7 @@ contract RevenueBuyBack is IRevenueRecipient, Initializable, ImmutableModule {
     }
 
     /**
-     * @notice Adds a new staking contract that will receive MTA rewards
+     * @notice Adds a new staking contract that will receive ZENO rewards
      * @param _stakingDialId dial identifier from the Emissions Controller of the staking contract.
      */
     function addStakingContract(uint16 _stakingDialId) external onlyGovernor {

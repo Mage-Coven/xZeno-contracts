@@ -14,7 +14,7 @@ xZeno Assets ([zAssets](./contracts/zasset/Zasset.sol)) are tokens that allow mi
 
 Core zAsset contracts utilise OpenZeppelin's [InitializableAdminUpgradeabilityProxy](https://github.com/OpenZeppelin/openzeppelin-sdk/blob/master/packages/lib/contracts/upgradeability/InitializableAdminUpgradeabilityProxy.sol) to facilitate future upgrades, fixes or feature additions. The upgrades are proposed by the xZeno Governors (with current governor address stored in the [Nexus](./contracts/nexus/Nexus.sol) - the system kernel) and executed via the [DelayedProxyAdmin](./contracts/upgradability/DelayedProxyAdmin.sol). Both changes to the `governor`, and contract upgrades have a one week delay built in to execution. This allows xZeno users a one week opt out window if they do not agree with the given change.
 
-xZeno rewards those who contribute to its utility and growth - for more information see [MTA](https://docs.xzeno.org/xzeno-assets/functions).
+xZeno rewards those who contribute to its utility and growth - for more information see [ZENO](https://docs.xzeno.org/xzeno-assets/functions).
 
 <br />
 

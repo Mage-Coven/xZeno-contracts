@@ -45,7 +45,7 @@ import { ZassetLibraryAddresses } from "types/generated/factories/Zasset__factor
 import { deployContract, logTxDetails } from "./utils/deploy-utils"
 import { getChain, getChainAddress, resolveAddress } from "./utils/networkAddressFactory"
 import { getSigner } from "./utils/signerFactory"
-import { PMTA, PzUSD, PWMATIC, tokens } from "./utils/tokens"
+import { PZENO, PzUSD, PWMATIC, tokens } from "./utils/tokens"
 
 // FIXME: this import does not work for some reason
 // import { sleep } from "@utils/time"
@@ -488,7 +488,7 @@ task("deploy-vizusd", "Deploy Polygon izUSD staking contract v-izUSD")
             [
                 nexusAddress,
                 PzUSD.savings, // izUSD
-                PMTA.address, // MTA bridged to Polygon
+                PZENO.address, // ZENO bridged to Polygon
                 PWMATIC.address, // Wrapped Matic on Polygon
                 ONE_DAY.mul(7), // 7 days
             ],
@@ -532,7 +532,7 @@ task("upgrade-vizusd", "Upgrade Polygon izUSD staking contract v-izUSD")
             [
                 nexusAddress,
                 PzUSD.savings, // izUSD
-                PMTA.address, // MTA bridged to Polygon
+                PZENO.address, // ZENO bridged to Polygon
                 PWMATIC.address, // Wrapped Matic on Polygon
                 ONE_DAY.mul(91), // 3 months
             ],

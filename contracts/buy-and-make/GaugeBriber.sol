@@ -9,7 +9,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 /**
  * @title   GaugeBriber
  * @author  xZeno
- * @notice  Collect system revenue in zUSD, converts to MTA, funds bribe on Votium
+ * @notice  Collect system revenue in zUSD, converts to ZENO, funds bribe on Votium
  * @dev     VERSION: 1.0
  *          DATE:    2021-10-19
  */

@@ -35,7 +35,7 @@ contract StakingRewards is
     using SafeERC20 for IERC20;
     using StableMath for uint256;
 
-    /// @notice token the rewards are distributed in. eg MTA
+    /// @notice token the rewards are distributed in. eg ZENO
     IERC20 public immutable rewardsToken;
 
     /// @notice length of each staking period in seconds. 7 days = 604,800; 3 months = 7,862,400
@@ -67,8 +67,8 @@ contract StakingRewards is
 
     /**
      * @param _nexus xZeno system Nexus address
-     * @param _stakingToken token that is beinf rewarded for being staked. eg MTA, izUSD or fPzUSD/GUSD
-     * @param _rewardsToken first token that is being distributed as a reward. eg MTA
+     * @param _stakingToken token that is beinf rewarded for being staked. eg ZENO, izUSD or fPzUSD/GUSD
+     * @param _rewardsToken first token that is being distributed as a reward. eg ZENO
      * @param _duration length of each staking period in seconds. 7 days = 604,800; 3 months = 7,862,400
      */
     constructor(

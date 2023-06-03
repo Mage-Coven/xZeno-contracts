@@ -18,7 +18,7 @@ library PlatformTokenVendorFactory {
 
     /**
      * @notice Deploys a new PlatformTokenVendor contract
-     * @param _rewardsToken reward or platform rewards token. eg MTA or WMATIC
+     * @param _rewardsToken reward or platform rewards token. eg ZENO or WMATIC
      * @return address of the deployed PlatformTokenVendor contract
      */
     function create(IERC20 _rewardsToken) public returns (address) {

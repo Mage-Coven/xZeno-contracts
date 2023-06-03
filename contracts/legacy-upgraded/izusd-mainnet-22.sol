@@ -1093,7 +1093,7 @@ library StableMath {
     uint256 private constant FULL_SCALE = 1e18;
 
     /**
-     * @notice Token Ratios are used when converting between units of bAsset, zAsset and MTA
+     * @notice Token Ratios are used when converting between units of bAsset, zAsset and ZENO
      * Reasoning: Takes into account token decimals, and difference in base unit (i.e. grams to Troy oz for gold)
      * @dev bAsset ratio unit for use in exact calculations,
      * where (1 bAsset unit * bAsset.ratio) / ratioScale == x zAsset unit
